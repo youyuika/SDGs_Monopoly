@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>抉擇大富翁｜資訊</title>
+    <style>
+        :root {
+            --fs-body: clamp(18px, 1.6vw, 28px);
+            --fs-card-num: clamp(36px, 5vw, 72px);
+            --fs-title: clamp(28px, 3.2vw, 60px);
+            --fs-modal: clamp(22px, 2.2vw, 40px);
+            --wrap-max: 1400px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: #222;
+            font-size: var(--fs-body);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
+            z-index: 5
+        }
+
+        .title {
+            font-weight: 900;
+            font-size: var(--fs-title)
+        }
+
+        .back {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800
+        }
+
+        .wrap {
+            max-width: var(--wrap-max);
+            margin: 20px auto 48px;
+            padding: 0 20px
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 1fr
+        }
+
+        .grid-scroll {
+            overflow-x: auto;
+            padding-bottom: 8px
+        }
+
+        @media (max-width:900px) {
+            .grid {
+                min-width: 980px
+            }
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e5e5e5;
+            border-radius: 18px;
+            background: #f0f7ff;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .06)
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .12)
+        }
+
+        .card .num {
+            font-size: var(--fs-card-num);
+            font-weight: 900;
+            opacity: .95;
+            letter-spacing: .02em
+        }
+
+        .card.used {
+            visibility: hidden;
+            pointer-events: none
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            display: none;
+            z-index: 20;
+            overflow: auto
+        }
+
+        .modal.show {
+            display: block
+        }
+
+        .modal .inner {
+            max-width: 1100px;
+            margin: 90px auto 60px;
+            padding: 0 24px
+        }
+
+        .modal h1 {
+            margin: 0 0 14px;
+            font-size: var(--fs-title);
+            line-height: 1.15
+        }
+
+        .modal .content {
+            border: 2px solid #eee;
+            border-radius: 20px;
+            padding: 24px 22px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, .12);
+            line-height: 1.7;
+            background: #fff;
+            font-size: var(--fs-modal)
+        }
+
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .btn {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800;
+            cursor: pointer
+        }
+
+        .btn.ghost {
+            background: #fff;
+            color: #111
+        }
+
+        .btn.ok {
+            background: #2f9e44;
+            border-color: #2f9e44
+        }
+
+        .btn.warn {
+            background: #e03131;
+            border-color: #e03131
+        }
+
+        .close {
+            position: fixed;
+            right: 18px;
+            top: 14px;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            border: 2px solid #e6e6e6;
+            background: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 34px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 22;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
+        }
+
+        .result {
+            margin-top: 12px
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="title">抉擇大富翁｜資訊</div>
+        <a class="back" href="index.html">返回大富翁</a>
+    </header>
+
+    <div class="wrap grid-scroll">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <!-- 全畫面字卡 -->
+    <div class="modal" id="modal" aria-hidden="true">
+        <button class="close" id="closeBtn" aria-label="關閉">×</button>
+        <div class="inner">
+            <h1 id="modalTitle">資訊 #1</h1>
+            <div class="content" id="modalBody">題目內容</div>
+        </div>
+    </div>
+
+    <script>
+        const USED_KEY = 'info_used_v1';
+        let used = new Set();
+        try { const raw = localStorage.getItem(USED_KEY); if (raw) used = new Set(JSON.parse(raw)); } catch { }
+        function saveUsed() { localStorage.setItem(USED_KEY, JSON.stringify([...used])); }
+        function markUsedImmediate(idx) {
+            used.add(idx); saveUsed();
+            const el = document.querySelector(`.card[data-index="${idx}"]`);
+            if (el) { el.classList.add('used'); el.setAttribute('tabindex', '-1'); }
+        }
+
+        const DATA = {
+            1: {
+                q: '某新聞標題寫「吃維他命 C 可以完全預防感冒！」，你會怎麼判斷這個資訊？',
+                opts: ['立刻相信，開始每天大量吃維他命 C', '查證來源，確認是否有醫學根據', '分享到群組讓大家都知道'],
+                ans: 1, // B
+                explain: '新聞標題常常誇大，正確做法是查證來源，避免被誤導。'
+            },
+            2: {
+                q: '你在網路上看到一張「明天全國停班停課」的圖片，你該怎麼做？',
+                opts: ['立刻相信，準備放假', '查詢縣市政府公告', '問朋友是不是真的'],
+                ans: 1, // B
+                explain: '颱風假資訊必須以政府公告為準。'
+            },
+            3: {
+                q: '小安玩手機遊戲時，出現「限時10分鐘！只要300元就能抽到超稀有角色」的廣告。他應該怎麼判斷？',
+                opts: ['立刻花錢抽卡，怕錯過機會', '想清楚這是商業手法，判斷自己是否真的需要', '把廣告當真，相信一定會抽到', '以上都一樣'],
+                ans: 1, // B
+                explain: '遊戲廣告常利用「限時、稀有」製造焦慮感。玩家要有資訊判讀力，了解這是行銷手段，不要被情緒影響而衝動消費。'
+            },
+            4: {
+                q: '小明收到一封簡訊：「恭喜您中獎 iPhone！請點擊連結領取。」這時候應該怎麼辦？',
+                opts: ['立刻點連結領獎', '拿去問老師或家長', '把簡訊刪掉，不理會', '以上都一樣'],
+                ans: 2, // C
+                explain: '這是常見的釣魚簡訊，點連結可能會中毒或被盜帳號，最安全的方法就是直接刪除。'
+            },
+            5: {
+                q: '小文在網路上看到廣告：「原價 5000 元的球鞋，只要 500 元，限量 10 雙！」他應該怎麼辦？',
+                opts: ['馬上下單，怕搶不到', '檢查賣場評價、來源是否可信', '把廣告轉傳給同學', '以上都一樣'],
+                ans: 1, // B
+                explain: '價格過於不合理的商品，可能是假貨或詐騙。要先確認官方網站或有信譽的通路再購買。'
+            }
+        };
+
+        const grid = document.getElementById('grid');
+        for (let i = 1; i <= 5; i++) {
+            const card = document.createElement('div');
+            card.className = 'card'; card.dataset.index = String(i);
+            card.setAttribute('role', 'button'); card.setAttribute('tabindex', '0');
+            card.innerHTML = `<div class="num">${i}</div>`;
+            if (used.has(i)) card.classList.add('used');
+            card.addEventListener('click', () => { if (!card.classList.contains('used')) openModal(i); });
+            card.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (!card.classList.contains('used')) openModal(i); } });
+            grid.appendChild(card);
+        }
+
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeBtn = document.getElementById('closeBtn');
+        let activeIndex = null;
+
+        function openModal(i) {
+            activeIndex = i;
+            modalTitle.textContent = `資訊 #${i}`;
+            renderQuestion(i);
+            modal.classList.add('show'); closeBtn.focus();
+        }
+        function closeModal() {
+            modal.classList.remove('show');
+            if (activeIndex != null) { markUsedImmediate(activeIndex); activeIndex = null; }
+        }
+        closeBtn.addEventListener('click', closeModal);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        function renderQuestion(i) {
+            const d = DATA[i];
+            const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `<div>${d.q}</div>`;
+
+            const actions = document.createElement('div'); actions.className = 'actions';
+            d.opts.forEach((t, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn ghost'; btn.dataset.idx = idx;
+                btn.innerHTML = `${letters[idx]}. ${t}`;
+                actions.appendChild(btn);
+            });
+            const result = document.createElement('div'); result.className = 'result';
+
+            actions.addEventListener('click', e => {
+                const idx = Number(e.target?.dataset?.idx);
+                if (isNaN(idx)) return;
+                [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
+                const correct = d.ans;
+                if (idx === correct) {
+                    e.target.classList.remove('ghost'); e.target.classList.add('ok');
+                    result.innerHTML = '✅ 正確！<br><span style="opacity:.8">' + d.explain + '</span>';
+                } else {
+                    e.target.classList.remove('ghost'); e.target.classList.add('warn');
+                    // 高亮正解
+                    const good = actions.querySelector(`button[data-idx="${correct}"]`);
+                    if (good) { good.classList.remove('ghost'); good.classList.add('ok'); }
+                    const L = letters[correct];
+                    result.innerHTML = `❌ 再想想～ 正確答案是 <b>${L}</b>。<br><span style="opacity:.8">${d.explain}</span>`;
+                }
+            });
+
+            wrap.appendChild(actions); wrap.appendChild(result);
+            modalBody.innerHTML = ''; modalBody.appendChild(wrap);
+        }
+    </script>
+</body>
+
+</html>

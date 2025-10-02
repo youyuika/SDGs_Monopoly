@@ -1,0 +1,617 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>抉擇大富翁</title>
+    <style>
+        :root {
+            --board-size: min(78vmin, 720px);
+            --orange: #f6c26b;
+            --green: #bfe9c3;
+            --blue: #b7e3f9;
+            --pink: #f4c0e6
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif
+        }
+
+        body {
+            margin: 0;
+            background: #fafafa;
+            color: #222;
+            display: flex;
+            min-height: 100dvh
+        }
+
+        .sidebar {
+            width: 220px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px
+        }
+
+        .left {
+            border-right: 1px solid #e6e6e6
+        }
+
+        .right {
+            border-left: 1px solid #e6e6e6;
+            align-items: center;
+            justify-content: center
+        }
+
+        h2 {
+            margin: .2em 0 .4em;
+            font-size: 18px
+        }
+
+        .money-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e3e3e3;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: #fff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .04)
+        }
+
+        .money-card .who {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%
+        }
+
+        .dot.red {
+            background: #e03131
+        }
+
+        .dot.blue {
+            background: #1c7ed6
+        }
+
+        .stepper {
+            display: flex;
+            gap: 6px;
+            align-items: center
+        }
+
+        .btn {
+            border: 1px solid #dcdcdc;
+            background: #fff;
+            border-radius: 10px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: .15s;
+            user-select: none
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .08)
+        }
+
+        .btn:active {
+            transform: translateY(0)
+        }
+
+        .btn.primary {
+            background: #111;
+            color: #fff;
+            border-color: #111
+        }
+
+        .btn.danger {
+            background: #e03131;
+            border-color: #e03131;
+            color: #fff
+        }
+
+        .amt {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-variant-numeric: tabular-nums;
+            min-width: 80px;
+            min-height: 28px;
+            text-align: center
+        }
+
+        .center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 18px
+        }
+
+        .board-wrap {
+            position: relative;
+            width: var(--board-size);
+            height: var(--board-size)
+        }
+
+        .board {
+            position: absolute;
+            inset: 0;
+            border: 3px solid #2a2a2a;
+            border-radius: 8px;
+            background: #fff;
+            display: grid;
+            grid-template-rows: repeat(5, 1fr);
+            grid-template-columns: repeat(5, 1fr)
+        }
+
+        .tile {
+            border: 1px solid #d9d9d9;
+            background: #fff;
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 4px 6px;
+            font-size: 12px;
+            text-align: center
+        }
+
+        .tile .label {
+            width: 100%;
+            padding: 2px 4px;
+            border-top: 1px dashed rgba(0, 0, 0, .15);
+            opacity: .95
+        }
+
+        .tile.orange .label {
+            background: var(--orange)
+        }
+
+        .tile.green .label {
+            background: var(--green)
+        }
+
+        .tile.blue .label {
+            background: var(--blue)
+        }
+
+        .tile.pink .label {
+            background: var(--pink)
+        }
+
+        .tile.start {
+            background: #fff8e6
+        }
+
+        .tile.start .label {
+            background: #ffe8a1;
+            font-weight: 700
+        }
+
+        .center-art {
+            position: absolute;
+            inset: 18% 16%;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .center-art .chars {
+            font-size: clamp(22px, 5.6vmin, 52px);
+            line-height: 1.1;
+            color: #7b2c2c;
+            font-weight: 800;
+            writing-mode: vertical-rl;
+            letter-spacing: 2px;
+            display: flex;
+            gap: 26px
+        }
+
+        .piece {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(0, 0, 0, .15)
+        }
+
+        .piece.red {
+            background: #e03131
+        }
+
+        .piece.blue {
+            background: #1c7ed6
+        }
+
+        .board>.blank {
+            border: none;
+            background: transparent
+        }
+
+        .dice-box {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center
+        }
+
+        .dice-num {
+            width: 92px;
+            height: 92px;
+            border: 2px dashed #cfcfcf;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 800;
+            background: #fff
+        }
+
+        .turn {
+            font-size: 14px;
+            color: #666
+        }
+
+        .turn b {
+            color: #111
+        }
+
+        .confirm {
+            position: fixed;
+            right: 16px;
+            top: 16px;
+            width: 360px;
+            max-width: 46vw;
+            z-index: 50;
+            border: 1px solid #e6e6e6;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .12);
+            display: none;
+            padding: 16px
+        }
+
+        .confirm.show {
+            display: block
+        }
+
+        .confirm h4 {
+            margin: 0 0 6px;
+            font-size: 16px
+        }
+
+        .confirm .row {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 10px
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar left">
+        <h2>目前金額</h2>
+        <div class="money-card" data-side="red">
+            <div class="who"><span class="dot red"></span>紅方</div>
+            <div class="stepper">
+                <button class="btn minus" data-side="red">−</button>
+                <div class="amt" id="money-red">$100</div>
+                <button class="btn plus" data-side="red">＋</button>
+            </div>
+        </div>
+        <div class="money-card" data-side="blue">
+            <div class="who"><span class="dot blue"></span>藍方</div>
+            <div class="stepper">
+                <button class="btn minus" data-side="blue">−</button>
+                <div class="amt" id="money-blue">$100</div>
+                <button class="btn plus" data-side="blue">＋</button>
+            </div>
+        </div>
+        <small style="opacity:.7">點擊＋／− 每次調整 $50，雙方獨立計算。</small>
+    </aside>
+
+    <main class="center">
+        <div class="board-wrap">
+            <div class="board" id="board">
+                <!-- 上邊 -->
+                <div class="tile green" data-idx="12">
+                    <div class="label">消費</div>
+                </div>
+                <div class="tile orange" data-idx="13">
+                    <div class="label">詐騙</div>
+                </div>
+                <div class="tile pink" data-idx="14">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile blue" data-idx="15">
+                    <div class="label">資訊</div>
+                </div>
+                <div class="tile orange" data-idx="0">
+                    <div class="label">詐騙</div>
+                </div>
+                <!-- 第二列 -->
+                <div class="tile blue" data-idx="11">
+                    <div class="label">資訊</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile green" data-idx="1">
+                    <div class="label">消費</div>
+                </div>
+                <!-- 第三列 -->
+                <div class="tile green" data-idx="10">
+                    <div class="label">消費</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile orange" data-idx="2">
+                    <div class="label">詐騙</div>
+                </div>
+                <!-- 第四列 -->
+                <div class="tile orange" data-idx="9">
+                    <div class="label">詐騙</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile blue" data-idx="3">
+                    <div class="label">資訊</div>
+                </div>
+                <!-- 下邊 -->
+                <div class="tile pink" data-idx="8">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile blue" data-idx="7">
+                    <div class="label">資訊</div>
+                </div>
+                <div class="tile green" data-idx="6">
+                    <div class="label">消費</div>
+                </div>
+                <div class="tile pink" data-idx="5">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile start" data-idx="4">
+                    <div class="label">起點</div>
+                </div>
+            </div>
+
+            <div class="center-art" aria-hidden="true">
+                <div class="chars"><span>抉</span><span>擇</span><span>大</span><span>富</span><span>翁</span></div>
+            </div>
+
+            <div id="piece-red" class="piece red" title="紅方"></div>
+            <div id="piece-blue" class="piece blue" title="藍方"></div>
+        </div>
+    </main>
+
+    <aside class="sidebar right">
+        <div class="dice-box">
+            <div class="dice-num" id="dice">—</div>
+            <button id="roll" class="btn primary" style="padding:12px 18px;font-size:16px">擲骰</button>
+            <div class="turn" id="turn">目前回合：<b>紅方</b></div>
+
+            <hr style="width:100%;border:none;border-top:1px solid #eee;margin:8px 0">
+            <button id="newgame" class="btn danger" style="padding:10px 14px;width:100%">新遊戲</button>
+            <small style="opacity:.75;line-height:1.4;text-align:center">
+                按下「新遊戲」將會<strong>重製所有遊戲狀態</strong>（回到起點、金額回 100、回合重置、清除機會／命運使用紀錄）。
+            </small>
+
+            <small style="opacity:.7">紅方先走，逆時針移動。</small>
+        </div>
+    </aside>
+
+    <div class="confirm" id="confirm">
+        <h4 id="confirm-title">進入關卡？</h4>
+        <div id="confirm-text">是否要進入本格關卡？</div>
+        <div class="row">
+            <button class="btn" id="cancel-enter">取消</button>
+            <button class="btn primary" id="confirm-enter">進入</button>
+        </div>
+    </div>
+
+    <script>
+        /* ===== 常數與鍵 ===== */
+        const STORAGE_KEY = 'monopoly_state_v2';
+        const ACTION_KEY = 'monopoly_action_v1'; // 跨頁待執行動作
+        const ACTOR_KEY = 'monopoly_actor_v1';  // 這回合實際進關者（紅/藍）
+        const TILES = [
+            { idx: 0, type: 'fraud' }, { idx: 1, type: 'consume' }, { idx: 2, type: 'fraud' }, { idx: 3, type: 'info' },
+            { idx: 4, type: 'start' }, { idx: 5, type: 'chance' }, { idx: 6, type: 'consume' }, { idx: 7, type: 'info' },
+            { idx: 8, type: 'chance' }, { idx: 9, type: 'fraud' }, { idx: 10, type: 'consume' }, { idx: 11, type: 'info' },
+            { idx: 12, type: 'consume' }, { idx: 13, type: 'fraud' }, { idx: 14, type: 'chance' }, { idx: 15, type: 'info' }
+        ];
+        const TILE_COUNT = TILES.length;
+
+        /* ===== 狀態 ===== */
+        let money = { red: 100, blue: 100 };
+        let pos = { red: 4, blue: 4 };
+        let turn = 'red';
+        let pendingType = null;
+
+        /* ===== DOM ===== */
+        const boardEl = document.getElementById('board');
+        const pieceRed = document.getElementById('piece-red');
+        const pieceBlue = document.getElementById('piece-blue');
+        const diceEl = document.getElementById('dice');
+        const rollBtn = document.getElementById('roll');
+        const turnEl = document.getElementById('turn');
+        const moneyRedEl = document.getElementById('money-red');
+        const moneyBlueEl = document.getElementById('money-blue');
+        const confirmBox = document.getElementById('confirm');
+        const confirmTitle = document.getElementById('confirm-title');
+        const confirmText = document.getElementById('confirm-text');
+        const btnEnter = document.getElementById('confirm-enter');
+        const btnCancel = document.getElementById('cancel-enter');
+        const newBtn = document.getElementById('newgame');
+
+        /* ===== 儲存/讀取 ===== */
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ money, pos, turn })); }
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    if (d.money) money = d.money;
+                    if (d.pos) pos = d.pos;
+                    if (d.turn) turn = d.turn;
+                }
+            } catch (e) { }
+        }
+
+        /* ===== 幫手 ===== */
+        function tileCenter(idx) {
+            const tile = boardEl.querySelector(`.tile[data-idx="${idx}"]`);
+            const rect = tile.getBoundingClientRect();
+            const container = boardEl.getBoundingClientRect();
+            return { x: rect.left - container.left + rect.width / 2, y: rect.top - container.top + rect.height / 2 };
+        }
+        function drawPieces() {
+            const cr = tileCenter(pos.red), cb = tileCenter(pos.blue);
+            pieceRed.style.left = (cr.x - 8) + 'px'; pieceRed.style.top = (cr.y - 6) + 'px';
+            pieceBlue.style.left = (cb.x + 8) + 'px'; pieceBlue.style.top = (cb.y + 6) + 'px';
+        }
+        function drawMoney() { moneyRedEl.textContent = `$${money.red}`; moneyBlueEl.textContent = `$${money.blue}`; }
+        function updateTurnText() { turnEl.innerHTML = `目前回合：<b>${turn === 'red' ? '紅方' : '藍方'}</b>`; }
+
+        /* ===== 擲骰與移動（逆時針） ===== */
+        function roll() {
+            const n = 1 + Math.floor(Math.random() * 6);
+            diceEl.textContent = n;
+            moveCurrent(n);
+        }
+        function moveCurrent(step) {
+            const p = turn;
+            pos[p] = (pos[p] - step + TILE_COUNT) % TILE_COUNT; // 逆時針
+            drawPieces();
+            saveState();
+
+            const tileType = TILES.find(t => t.idx === pos[p])?.type || '';
+            pendingType = tileType;
+
+            const mapping = { fraud: '詐騙', consume: '消費', info: '資訊', chance: '機會／命運', start: '起點' };
+            confirmTitle.textContent = `停在「${mapping[tileType] || '關卡'}」`;
+            confirmText.textContent = `要進入「${mapping[tileType] || '關卡'}」關卡嗎？`;
+            confirmBox.classList.add('show');
+        }
+
+        /* ===== 額外：針對指定隊伍移動（靜默，不跳確認） ===== */
+        function moveBy(side, steps) {
+            const next = (pos[side] - steps + TILE_COUNT) % TILE_COUNT;
+            pos[side] = next;
+            drawPieces();
+            saveState();
+        }
+        function goStart(side) {
+            pos[side] = 4; // 起點
+            drawPieces();
+            saveState();
+        }
+
+        /* ===== 確認框 ===== */
+        btnEnter.addEventListener('click', () => {
+            // 記下這次實際進關的隊伍
+            localStorage.setItem(ACTOR_KEY, turn);
+            confirmBox.classList.remove('show');
+
+            // 先切換回合（之後各關卡如需讓原隊再行動，會在回來時用 ACTION 將 turn 設回去）
+            openPageByType(pendingType);
+            turn = (turn === 'red') ? 'blue' : 'red';
+            saveState();
+        });
+        btnCancel.addEventListener('click', () => {
+            confirmBox.classList.remove('show');
+            turn = (turn === 'red') ? 'blue' : 'red';
+            updateTurnText();
+            saveState();
+        });
+
+        /* ===== 開頁 ===== */
+        function openPageByType(type) {
+            const map = { fraud: 'fraud.html', consume: 'consume.html', info: 'info.html', chance: 'chance.html' };
+            const url = map[type];
+            if (url) location.href = url;
+        }
+
+        /* ===== 金額手動調整 ===== */
+        document.querySelectorAll('.money-card .plus').forEach(b => {
+            b.addEventListener('click', () => { money[b.dataset.side] += 50; drawMoney(); saveState(); });
+        });
+        document.querySelectorAll('.money-card .minus').forEach(b => {
+            b.addEventListener('click', () => { money[b.dataset.side] -= 50; drawMoney(); saveState(); });
+        });
+
+        /* ===== 新遊戲 ===== */
+        function newGame() {
+            if (!confirm('確定要開始新遊戲嗎？這會重製所有狀態與已使用卡牌。')) return;
+            money = { red: 100, blue: 100 };
+            pos = { red: 4, blue: 4 };
+            turn = 'red';
+            diceEl.textContent = '—';
+            localStorage.removeItem('chance_used_v2');
+            localStorage.removeItem(ACTION_KEY);
+            localStorage.removeItem(ACTOR_KEY);
+            saveState();
+            drawMoney(); drawPieces(); updateTurnText();
+        }
+        newBtn.addEventListener('click', newGame);
+
+        /* ===== chance.html 傳回的待執行動作 ===== */
+        function processPendingAction() {
+            try {
+                const raw = localStorage.getItem(ACTION_KEY);
+                if (!raw) return;
+                const act = JSON.parse(raw);
+                localStorage.removeItem(ACTION_KEY); // 讀到就清
+                if (!act || !act.type) return;
+
+                // 指定行動者（若未提供，fallback 為當前回合）
+                const actor = act.actor || turn;
+
+                if (act.type === 'extra_roll') {
+                    // 設回讓「actor」擲骰（是否自動，由 auto 決定）
+                    turn = actor;
+                    updateTurnText(); saveState();
+                    if (act.auto) { setTimeout(() => roll(), 200); }
+                }
+                else if (act.type === 'move_for' && typeof act.steps === 'number') {
+                    moveBy(actor, act.steps); // 靜默移動，不跳確認、不換回合
+                }
+                else if (act.type === 'go_start') {
+                    goStart(actor);
+                    if (typeof act.add === 'number') {
+                        money[actor] = (money[actor] || 0) + act.add;
+                        drawMoney(); saveState();
+                    }
+                }
+            } catch (e) { }
+        }
+
+        /* ===== 初始化 ===== */
+        window.addEventListener('load', () => {
+            loadState();
+            drawMoney(); drawPieces(); updateTurnText();
+            processPendingAction(); // ★ 自動處理跨頁動作
+        });
+        window.addEventListener('resize', drawPieces);
+        rollBtn.addEventListener('click', roll);
+    </script>
+</body>
+
+</html>

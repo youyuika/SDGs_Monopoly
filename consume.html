@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>抉擇大富翁｜消費</title>
+    <style>
+        :root {
+            --fs-body: clamp(18px, 1.6vw, 28px);
+            --fs-card-num: clamp(36px, 5vw, 72px);
+            --fs-title: clamp(28px, 3.2vw, 60px);
+            --fs-modal: clamp(22px, 2.2vw, 40px);
+            --wrap-max: 1400px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: #222;
+            font-size: var(--fs-body);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
+            z-index: 5
+        }
+
+        .title {
+            font-weight: 900;
+            font-size: var(--fs-title)
+        }
+
+        .back {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800
+        }
+
+        .wrap {
+            max-width: var(--wrap-max);
+            margin: 20px auto 48px;
+            padding: 0 20px
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 1fr
+        }
+
+        .grid-scroll {
+            overflow-x: auto;
+            padding-bottom: 8px
+        }
+
+        @media (max-width:900px) {
+            .grid {
+                min-width: 980px
+            }
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e5e5e5;
+            border-radius: 18px;
+            background: #ecfbf0;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .06)
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .12)
+        }
+
+        .card .num {
+            font-size: var(--fs-card-num);
+            font-weight: 900;
+            opacity: .95;
+            letter-spacing: .02em
+        }
+
+        .card.used {
+            visibility: hidden;
+            pointer-events: none
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            display: none;
+            z-index: 20;
+            overflow: auto
+        }
+
+        .modal.show {
+            display: block
+        }
+
+        .modal .inner {
+            max-width: 1100px;
+            margin: 90px auto 60px;
+            padding: 0 24px
+        }
+
+        .modal h1 {
+            margin: 0 0 14px;
+            font-size: var(--fs-title);
+            line-height: 1.15
+        }
+
+        .modal .content {
+            border: 2px solid #eee;
+            border-radius: 20px;
+            padding: 24px 22px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, .12);
+            line-height: 1.7;
+            background: #fff;
+            font-size: var(--fs-modal)
+        }
+
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px
+        }
+
+        .btn {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800;
+            cursor: pointer
+        }
+
+        .btn.ghost {
+            background: #fff;
+            color: #111
+        }
+
+        .btn.ok {
+            background: #2f9e44;
+            border-color: #2f9e44
+        }
+
+        .btn.warn {
+            background: #e03131;
+            border-color: #e03131
+        }
+
+        .close {
+            position: fixed;
+            right: 18px;
+            top: 14px;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            border: 2px solid #e6e6e6;
+            background: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 34px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 22;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
+        }
+
+        .result {
+            margin-top: 12px
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="title">抉擇大富翁｜消費</div>
+        <a class="back" href="index.html">返回大富翁</a>
+    </header>
+
+    <div class="wrap grid-scroll">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="modal" id="modal" aria-hidden="true">
+        <button class="close" id="closeBtn" aria-label="關閉">×</button>
+        <div class="inner">
+            <h1 id="modalTitle">消費 #1</h1>
+            <div class="content" id="modalBody">題目內容</div>
+        </div>
+    </div>
+
+    <script>
+        const USED_KEY = 'consume_used_v1';
+        let used = new Set(); try { const raw = localStorage.getItem(USED_KEY); if (raw) used = new Set(JSON.parse(raw)); } catch { }
+        function saveUsed() { localStorage.setItem(USED_KEY, JSON.stringify([...used])); }
+        function markUsedImmediate(idx) { used.add(idx); saveUsed(); const el = document.querySelector(`.card[data-index="${idx}"]`); if (el) { el.classList.add('used'); el.setAttribute('tabindex', '-1'); } }
+
+        const DATA = {
+            1: {
+                q: '在超市看到「非籠飼雞蛋」，代表什麼意思？',
+                opts: ['價格便宜就好', '支持動物福利，讓雞隻生活更健康', '雞蛋顏色比較白', '吃起來會變得更聰明'],
+                ans: 1,
+                explain: '選擇「非籠飼雞蛋」是一種友善環境、友善動物的消費方式，代表我們重視動物福利。'
+            },
+            2: {
+                q: '小明看到廣告就想買新玩具車，但家裡已經有好幾台了。符合友善環境的消費是？',
+                opts: ['先冷靜想一想，避免衝動消費', '趕快買，不然會被搶走', '把舊玩具車丟掉', '請同學幫他買'],
+                ans: 0,
+                explain: '不要因為一時興奮就買東西，避免浪費資源，才是環境友善的好習慣。'
+            },
+            3: {
+                q: '放學去補習班有三種方式：走路/腳踏車、搭公車、請爸爸開車。哪個最能降低耗能、減少碳足跡？',
+                opts: ['走路或騎腳踏車', '每次都要爸爸開車載', '搭大眾交通工具', '以上都一樣'],
+                ans: 0,
+                explain: '走路或騎腳踏車最環保，碳排放最低；如果路程太遠，搭大眾交通工具也比自己開車更友善環境。'
+            },
+            4: {
+                q: '小美在餐廳點了一大份餐吃不完要丟掉。下次該怎麼做才是「負責任的消費」？',
+                opts: ['點適量的餐點，吃得完就好', '越多越好，吃不完丟掉也沒關係', '故意點兩份，吃一份丟一份', '不用想，反正有錢就能買'],
+                ans: 0,
+                explain: '負責任的消費就是要避免浪費。吃不完就丟掉不但浪費食物，也浪費種植、運輸所用的水和能源。點適量、吃得完，才是對環境和社會負責。'
+            },
+            5: {
+                q: '小明要買鉛筆盒：①可用很久的堅固款 ②便宜但容易壞的一次性款。哪個是負責任的消費？',
+                opts: ['便宜的就好', '漂亮的就好', '可以用很久的堅固鉛筆盒', '買兩個一起用'],
+                ans: 2,
+                explain: '便宜但容易壞掉的東西，買了不久又要換，反而更浪費錢和資源。選擇耐用的產品，可以用更久，也能減少垃圾，這就是負責任的消費。'
+            }
+        };
+
+        const grid = document.getElementById('grid');
+        for (let i = 1; i <= 5; i++) {
+            const card = document.createElement('div');
+            card.className = 'card'; card.dataset.index = String(i);
+            card.setAttribute('role', 'button'); card.setAttribute('tabindex', '0');
+            card.innerHTML = `<div class="num">${i}</div>`;
+            if (used.has(i)) card.classList.add('used');
+            card.addEventListener('click', () => { if (!card.classList.contains('used')) openModal(i); });
+            card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!card.classList.contains('used')) openModal(i); } });
+            grid.appendChild(card);
+        }
+
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeBtn = document.getElementById('closeBtn');
+        let activeIndex = null;
+
+        function openModal(i) {
+            activeIndex = i; modalTitle.textContent = `消費 #${i}`; renderQuestion(i);
+            modal.classList.add('show'); closeBtn.focus();
+        }
+        function closeModal() {
+            modal.classList.remove('show');
+            if (activeIndex != null) { markUsedImmediate(activeIndex); activeIndex = null; }
+        }
+        closeBtn.addEventListener('click', closeModal);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        function renderQuestion(i) {
+            const d = DATA[i]; const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            const wrap = document.createElement('div'); wrap.innerHTML = `<div>${d.q}</div>`;
+            const actions = document.createElement('div'); actions.className = 'actions';
+            d.opts.forEach((t, idx) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn ghost'; btn.dataset.idx = idx;
+                btn.innerHTML = `${letters[idx]}. ${t}`;
+                actions.appendChild(btn);
+            });
+            const result = document.createElement('div'); result.className = 'result';
+            actions.addEventListener('click', e => {
+                const idx = Number(e.target?.dataset?.idx); if (isNaN(idx)) return;
+                [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
+                const correct = d.ans;
+                if (idx === correct) {
+                    e.target.classList.remove('ghost'); e.target.classList.add('ok');
+                    result.innerHTML = '✅ 正確！<br><span style="opacity:.8">' + d.explain + '</span>';
+                } else {
+                    e.target.classList.remove('ghost'); e.target.classList.add('warn');
+                    const good = actions.querySelector(`button[data-idx="${correct}"]`);
+                    if (good) { good.classList.remove('ghost'); good.classList.add('ok'); }
+                    const L = letters[correct];
+                    result.innerHTML = `❌ 再想想～ 正確答案是 <b>${L}</b>。<br><span style="opacity:.8">${d.explain}</span>`;
+                }
+            });
+            wrap.appendChild(actions); wrap.appendChild(result);
+            modalBody.innerHTML = ''; modalBody.appendChild(wrap);
+        }
+    </script>
+</body>
+
+</html>

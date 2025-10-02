@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>抉擇大富翁｜機會／命運</title>
+    <style>
+        :root {
+            --fs-body: clamp(18px, 1.6vw, 28px);
+            --fs-card-num: clamp(36px, 5vw, 72px);
+            --fs-title: clamp(28px, 3.2vw, 60px);
+            --fs-modal: clamp(22px, 2.2vw, 40px);
+            --wrap-max: 1400px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif
+        }
+
+        html,
+        body {
+            height: 100%
+        }
+
+        body {
+            margin: 0;
+            background: #fff;
+            color: #222;
+            font-size: var(--fs-body);
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            background: #fff;
+            border-bottom: 2px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 20px;
+            z-index: 5
+        }
+
+        .title {
+            font-weight: 900;
+            font-size: var(--fs-title)
+        }
+
+        .back {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800
+        }
+
+        .wrap {
+            max-width: var(--wrap-max);
+            margin: 20px auto 48px;
+            padding: 0 20px
+        }
+
+        .grid {
+            display: grid;
+            gap: 18px;
+            grid-template-columns: repeat(5, 1fr);
+            grid-auto-rows: 1fr
+        }
+
+        .grid-scroll {
+            overflow-x: auto;
+            padding-bottom: 8px
+        }
+
+        @media (max-width:900px) {
+            .grid {
+                min-width: 980px
+            }
+        }
+
+        .card {
+            aspect-ratio: 3/4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e5e5e5;
+            border-radius: 18px;
+            background: #f7f7f7;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            transition: transform .15s, box-shadow .15s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, .06)
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .12)
+        }
+
+        .card .num {
+            font-size: var(--fs-card-num);
+            font-weight: 900;
+            opacity: .95;
+            letter-spacing: .02em
+        }
+
+        .card.used {
+            visibility: hidden;
+            pointer-events: none
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            display: none;
+            z-index: 20;
+            overflow: auto
+        }
+
+        .modal.show {
+            display: block
+        }
+
+        .modal .inner {
+            max-width: 1100px;
+            margin: 90px auto 60px;
+            padding: 0 24px
+        }
+
+        .modal h1 {
+            margin: 0 0 14px;
+            font-size: var(--fs-title);
+            line-height: 1.15
+        }
+
+        .modal .content {
+            border: 2px solid #eee;
+            border-radius: 20px;
+            padding: 24px 22px;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, .12);
+            line-height: 1.7;
+            background: #fff;
+            font-size: var(--fs-modal)
+        }
+
+        .actions {
+            margin-top: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center
+        }
+
+        .btn {
+            border: 2px solid #111;
+            background: #111;
+            color: #fff;
+            border-radius: 12px;
+            padding: .6em 1em;
+            text-decoration: none;
+            font-weight: 800;
+            cursor: pointer
+        }
+
+        .btn.ghost {
+            background: #fff;
+            color: #111
+        }
+
+        .btn.ok {
+            background: #2f9e44;
+            border-color: #2f9e44
+        }
+
+        .btn.warn {
+            background: #e03131;
+            border-color: #e03131
+        }
+
+        .close {
+            position: fixed;
+            right: 18px;
+            top: 14px;
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+            border: 2px solid #e6e6e6;
+            background: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 34px;
+            font-weight: 900;
+            cursor: pointer;
+            z-index: 22;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
+        }
+
+        .note {
+            opacity: .75;
+            font-size: .9em;
+            margin-top: 8px
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="title">抉擇大富翁｜機會／命運</div>
+        <a class="back" href="index.html">返回大富翁</a>
+    </header>
+
+    <div class="wrap grid-scroll">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <!-- 全畫面字卡 -->
+    <div class="modal" id="modal" aria-hidden="true">
+        <button class="close" id="closeBtn" aria-label="關閉">×</button>
+        <div class="inner">
+            <h1 id="modalTitle">機會／命運 #1</h1>
+            <div class="content" id="modalBody">題目內容</div>
+        </div>
+    </div>
+
+    <script>
+        /* ====== 鍵與共用 ====== */
+        const USED_KEY = 'chance_used_v2';
+        const STATE_KEY = 'monopoly_state_v2';
+        const ACTION_KEY = 'monopoly_action_v1';
+        const ACTOR_KEY = 'monopoly_actor_v1';
+
+        /* ====== 工具：讀寫狀態 ====== */
+        function readState() {
+            try { return JSON.parse(localStorage.getItem(STATE_KEY)) || { money: { red: 100, blue: 100 }, pos: { red: 4, blue: 4 }, turn: 'red' }; }
+            catch { return { money: { red: 100, blue: 100 }, pos: { red: 4, blue: 4 }, turn: 'red' }; }
+        }
+        function writeState(st) { localStorage.setItem(STATE_KEY, JSON.stringify(st)); }
+        function getActor() { return localStorage.getItem(ACTOR_KEY) || readState().turn; }
+        function addMoney(side, delta) {
+            const st = readState();
+            st.money[side] = (st.money[side] ?? 0) + delta;
+            writeState(st);
+            return st.money[side];
+        }
+        function queueAction(obj) { localStorage.setItem(ACTION_KEY, JSON.stringify(obj)); }
+
+        /* ====== 卡牌使用紀錄 ====== */
+        let used = new Set(); try { const raw = localStorage.getItem(USED_KEY); if (raw) used = new Set(JSON.parse(raw)); } catch { }
+        function saveUsed() { localStorage.setItem(USED_KEY, JSON.stringify([...used])); }
+        function markUsedImmediate(idx) {
+            used.add(idx); saveUsed();
+            const el = document.querySelector(`.card[data-index="${idx}"]`);
+            if (el) { el.classList.add('used'); el.setAttribute('tabindex', '-1'); }
+        }
+
+        /* ====== 基本文案 ====== */
+        const BASE = {
+            1: `小隊派人出來猜拳。<br>（本題採用：<b>勝方 +50 元，敗方 0 元</b>）`,
+            2: `釣魚簡訊判斷：請說出 <b>至少 1 個</b> 分辨方法（如：檢查網域、不要在連結輸入個資、改用官方客服查證）。<br>說得出 → <b>+50</b>；說不出 → <b>0</b>。`,
+            3: `弄丟了文具，必須花錢重新購買 → <b>損失 50 元</b>。`,
+            4: `群組有人傳「點連結送禮券」的假消息，小隊沒有查證就亂傳 → <b>損失 50 元</b>。（若能說出正確做法可免扣）`,
+            5: `資訊判讀小問題：警政署反詐騙專線是幾號？<b>165</b><br>答對 → <b>+50</b>；答錯 → <b>不懲罰</b>。`,
+            6: `突如其來的打工機會！喊隊呼 → <b>+100</b>。`,
+            7: `選擇題：<br>A. 不衝動消費、把零用錢存下來 → <b>+50</b><br>B. 買「前進兩格券」 → <b>前進 1 格</b>（回主頁後會自動前進）`,
+            8: `贏在起跑點！<br><b>回到起點並 +100 元</b>（回主頁即時生效）。`,
+            9: `運氣爆棚！<br><b>+50</b> 並 <b>再擲一次骰子</b>（回到大富翁後，由本隊操作者自行按下「擲骰」）。`,
+            10: `加倍券！下一次回答問題所得<b>加倍</b>（由關主記錄）。`,
+            11: `高風險高報酬：在此擲骰！<br>點數 ≥4 → <b>+50</b>；點數 ≤3 → <b>−100</b>；<b>不參與 → 0</b>。`,
+            12: `假新聞轉發：沒有查證就轉發，結果是錯誤資訊 → <b>−50</b>。`,
+            13: `比價高手！<br>「使用合法折扣券比價」vs「堅持原價」。選擇後才揭曉結果。`,
+            14: `生活資安題：說出 <b>1 個</b> 能保護自己資料的方法（如：設定螢幕鎖、不公開密碼、下載前問師長/家長）。<br>說得出 → <b>+50</b>；還沒想好 → <b>0</b>。`,
+            15: `社群要負責：<br>「回報不實貼文並附查核連結」vs「跟風轉發」。選擇後才揭曉結果。`
+        };
+
+        /* ====== 產生 15 張卡 ====== */
+        const grid = document.getElementById('grid');
+        for (let i = 1; i <= 15; i++) {
+            const card = document.createElement('div');
+            card.className = 'card'; card.dataset.index = String(i);
+            card.setAttribute('role', 'button'); card.setAttribute('tabindex', '0');
+            card.innerHTML = `<div class="num">${i}</div>`;
+            if (used.has(i)) card.classList.add('used');
+            card.addEventListener('click', () => { if (!card.classList.contains('used')) openModal(i); });
+            card.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (!card.classList.contains('used')) openModal(i); } });
+            grid.appendChild(card);
+        }
+
+        /* ====== Modal 基礎 ====== */
+        const modal = document.getElementById('modal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const closeBtn = document.getElementById('closeBtn');
+        let activeIndex = null;
+
+        function openModal(i) {
+            activeIndex = i;
+            modalTitle.textContent = `機會／命運 #${i}`;
+            renderQuestion(i);
+            modal.classList.add('show'); closeBtn.focus();
+        }
+        function closeModal() {
+            modal.classList.remove('show');
+            if (activeIndex != null) { markUsedImmediate(activeIndex); activeIndex = null; }
+        }
+        closeBtn.addEventListener('click', closeModal);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        /* ====== 各題互動渲染 ====== */
+        function renderQuestion(i) {
+            const actor = getActor(); // 以實際進關者為準
+            const wrap = document.createElement('div');
+            wrap.innerHTML = `<div>${BASE[i] || '（尚未設定）'}</div>`;
+
+            const actions = document.createElement('div'); actions.className = 'actions';
+            const result = document.createElement('div'); result.className = 'note';
+
+            switch (i) {
+                case 1: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="rwin">紅方勝（+50）</button>
+        <button class="btn" data-act="bwin">藍方勝（+50）</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        const side = act === 'rwin' ? 'red' : 'blue';
+                        addMoney(side, 50);
+                        result.textContent = `已發放 ${side === 'red' ? '紅方' : '藍方'} +50 元。`;
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                case 2: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="ok">說得出（+50）</button>
+        <button class="btn ghost" data-act="na">說不出（0）</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'ok') { addMoney(actor, 50); result.textContent = '已加 +50 元給本隊。'; }
+                        else { result.textContent = '已記錄（不扣分）'; }
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                case 5: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="right">答對（+50）</button>
+        <button class="btn ghost" data-act="wrong">答錯（0）</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'right') { addMoney(actor, 50); result.textContent = '答對！已加 +50 元。'; }
+                        else { result.textContent = '答錯也不懲罰。'; }
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                /* ★★★ 修正點：#7 前進一格會「立即標記卡片已使用」並用獨立按鈕返回主頁 ★★★ */
+                case 7: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="A">選 A（不衝動消費）</button>
+        <button class="btn" data-act="B">選 B（買前進券）</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+
+                        // 先把兩個選項都 disable，避免重複點擊
+                        disableSiblings(e.target); e.target.disabled = true;
+
+                        if (act === 'A') {
+                            addMoney(actor, 50);
+                            result.textContent = '結果：做得好！本隊 +50 元 ✔';
+                        } else {
+                            // 先標記卡牌已使用（避免直接跳回主頁後卡片仍在）
+                            markUsedImmediate(7);
+                            // 回主頁後，讓「actor」前進 1 格（靜默）
+                            queueAction({ type: 'move_for', actor, steps: 1 });
+
+                            // 重繪動作區：獨立顯示一顆返回按鈕，版面整齊
+                            actions.innerHTML = '';
+                            const backRow = document.createElement('div'); backRow.className = 'actions';
+                            const backBtn = document.createElement('a'); backBtn.className = 'btn'; backBtn.href = 'index.html'; backBtn.textContent = '返回大富翁';
+                            backRow.appendChild(backBtn);
+                            actions.after(backRow);
+
+                            result.textContent = '結果：本隊前進 1 格（回到大富翁後自動前進）。';
+                        }
+                    });
+                } break;
+
+                case 8: {
+                    actions.innerHTML = `<button class="btn" data-act="go">執行：回起點並 +100（返回大富翁）</button>`;
+                    actions.addEventListener('click', () => {
+                        addMoney(actor, 100);
+                        markUsedImmediate(8);
+                        queueAction({ type: 'go_start', actor, add: 0 });
+                        location.href = 'index.html';
+                    });
+                } break;
+
+                case 9: {
+                    actions.innerHTML = `<button class="btn" data-act="again">返回大富翁，本隊自行按下「擲骰」（+50）</button>`;
+                    actions.addEventListener('click', () => {
+                        addMoney(actor, 50);
+                        markUsedImmediate(9);
+                        queueAction({ type: 'extra_roll', actor, auto: false });
+                        location.href = 'index.html';
+                    });
+                } break;
+
+                case 11: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="roll">在此擲骰</button>
+        <button class="btn ghost" data-act="skip">不參與（0）</button>
+        <span id="p11res" class="note"></span>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'skip') { closeModal(); return; }
+                        if (act === 'roll') {
+                            const n = 1 + Math.floor(Math.random() * 6);
+                            const resEl = document.getElementById('p11res');
+                            if (n >= 4) { addMoney(actor, 50); resEl.innerHTML = `點數 <b>${n}</b>：恭喜 +50 元 ✔`; }
+                            else { addMoney(actor, -100); resEl.innerHTML = `點數 <b>${n}</b>：扣 100 元`; }
+                            e.target.disabled = true; e.target.textContent = `已擲出 ${n}`;
+                        }
+                    });
+                } break;
+
+                case 13: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="save">使用合法折扣券比價</button>
+        <button class="btn ghost" data-act="full">堅持原價購買</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'save') { addMoney(actor, 50); result.textContent = '結果：聰明消費！本隊 +50 元 ✔'; }
+                        else { addMoney(actor, -50); result.textContent = '結果：沒比價花多了… 本隊 −50 元'; }
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                case 14: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="ok">說得出（+50）</button>
+        <button class="btn ghost" data-act="na">還沒想好（0）</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'ok') { addMoney(actor, 50); result.textContent = '已加 +50 元給本隊。'; }
+                        else { result.textContent = '已記錄（0）'; }
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                case 15: {
+                    actions.innerHTML = `
+        <button class="btn" data-act="report">回報不實並附查核連結</button>
+        <button class="btn ghost" data-act="fwd">跟風轉發</button>`;
+                    actions.addEventListener('click', (e) => {
+                        const act = e.target?.dataset?.act; if (!act) return;
+                        if (act === 'report') { addMoney(actor, 50); result.textContent = '結果：做得好！本隊 +50 元 ✔'; }
+                        else { addMoney(actor, -50); result.textContent = '結果：造成誤導… 本隊 −50 元'; }
+                        disableSiblings(e.target);
+                    });
+                } break;
+
+                default: {
+                    actions.innerHTML = `<button class="btn ghost" data-act="ok">知道了</button>`;
+                    actions.addEventListener('click', closeModal);
+                }
+            }
+
+            wrap.appendChild(actions); wrap.appendChild(result);
+            modalBody.innerHTML = ''; modalBody.appendChild(wrap);
+        }
+
+        function disableSiblings(btn) {
+            const parent = btn.parentElement;
+            [...parent.querySelectorAll('button')].forEach(b => { if (b !== btn) { b.disabled = true; } });
+        }
+    </script>
+</body>
+
+</html>
