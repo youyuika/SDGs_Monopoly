@@ -1,1 +1,3 @@
-點進index.html檔案
+Windows系統可點開「開始遊戲（Windows）」來開啟網頁
+Mac系統可點擊「開始遊戲（Mac）」來開啟網頁
+或是直接點進index.html檔案也可行
