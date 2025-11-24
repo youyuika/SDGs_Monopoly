@@ -1,0 +1,395 @@
+:root {
+    --fs-body: clamp(18px, 1.6vw, 28px);
+    --fs-card-num: clamp(36px, 5vw, 72px);
+    --fs-title: clamp(28px, 3.2vw, 60px);
+    --fs-modal: clamp(22px, 2.2vw, 40px);
+    --wrap-max: 1400px;
+}
+
+* {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif
+}
+
+html,
+body {
+    height: 100%
+}
+
+body {
+    margin: 0;
+    background-image: url('../img/主視覺背景圖.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    color: #222;
+    font-size: var(--fs-body);
+}
+
+header {
+    position: sticky;
+    top: 0;
+    /* background: #fff; <-- 刪除舊的全白背景 */
+
+    /* ★ 改成半透明白色 */
+    background: transparent;
+    backdrop-filter: blur(10px);
+
+    /* 調整底部邊框顏色讓它柔和一點 */
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    z-index: 5
+}
+
+.title {
+    font-weight: 900;
+    font-size: var(--fs-title)
+}
+
+.back {
+    border: 2px solid #111;
+    background: #111;
+    color: #fff;
+    border-radius: 12px;
+    padding: .6em 1em;
+    text-decoration: none;
+    font-weight: 800
+}
+
+.wrap {
+    max-width: var(--wrap-max);
+    margin: 20px auto 48px;
+    padding: 0 20px
+}
+
+.grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: 1fr
+}
+
+.grid-scroll {
+    overflow-x: auto;
+    padding-bottom: 8px
+}
+
+@media (max-width:900px) {
+    .grid {
+        min-width: 980px
+    }
+}
+
+.card {
+    aspect-ratio: 3/4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background-color: transparent;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+    /* 強制圖片填滿整張卡 */
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    transition: transform .15s, box-shadow .15s;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, .06)
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .12)
+}
+
+.card .num {
+    display: none;
+}
+
+.card.used {
+    visibility: hidden;
+    pointer-events: none
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    /* 背景改為透明，讓星空底圖露出來，可加深色遮罩讓文字更跳 */
+    background: rgba(0, 0, 0, 0.4);
+    display: none;
+    z-index: 20;
+    /* 改用 Flexbox 佈局：上部分是題目，下部分是按鈕 */
+    display: none;
+    /* JS 控制 show/hide */
+    flex-direction: column;
+    justify-content: center;
+    /* 上下撐開 */
+    align-items: center;
+    gap: 4vh;
+    padding: 4vh 4vw;
+    /* 四周留邊 */
+}
+
+.modal.show {
+    display: block
+}
+
+/* 顯示時改為 flex */
+.modal.show {
+    display: flex !important;
+}
+
+.modal .inner {
+    /* 移除舊設定，這裡不再當作卡片容器，只是一個隱形 wrapper */
+    display: contents;
+}
+
+/* ===== 題目字卡區 (上半部) ===== */
+.modal-question-box {
+    width: 100%;
+    max-width: 1550px;
+    /* 限制最大寬度 */
+    /* 根據圖片比例設定高度，這裡用 aspect-ratio 自動計算 */
+    aspect-ratio: 20 / 6;
+    /* 大約是橫幅的比例，可依圖片微調 */
+
+    background-image: url('../img/詐騙關.jpg');
+
+    background-size: 100% 100%;
+    /* 強制填滿 */
+    background-position: center;
+    background-repeat: no-repeat;
+
+    /* 文字排版 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    /* ★ 內距設定：避開圖片邊緣的裝飾 (爆米花人) */
+    /* 上 右 下 左 */
+    padding: 4% 15% 4% 15%;
+
+    /* 字體特大化 */
+    font-size: clamp(24px, 4vw, 56px);
+    font-weight: 900;
+    line-height: 1.4;
+    color: #000;
+    /* 依背景色調整文字顏色 */
+
+    /* 加一點文字陰影增加可讀性 */
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
+}
+
+/* 針對不同圖片的微調 (您可以貼在各檔案覆蓋上面的 padding) */
+/* 資訊關 (爆米花在右邊) -> padding-right 要大 */
+/* 詐騙關 (兩邊都有?) -> 左右都要大 */
+/* 消費關 (中間偏下) -> padding-bottom 要注意 */
+
+
+/* ===== 選項按鈕區 (下半部) ===== */
+/* ===== 修改：選項按鈕區 (讓按鈕填滿寬度) ===== */
+.modal-actions {
+    width: 100%;
+    max-width: 1600px;
+    margin-top: 0;
+    /* 推到底部 */
+    padding-top: 0;
+
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    /* 按鈕間距 */
+    flex-wrap: nowrap;
+    /* 不換行 */
+}
+
+/* ===== 修改：按鈕樣式 (修正文字置中問題) ===== */
+.modal-actions .btn {
+    flex: 1;
+    /* ★ 關鍵：讓按鈕平分空間 (3個就各佔33%, 4個就各佔25%) */
+
+    /* 修正置中問題：移除原本過大的 padding */
+    padding: 10px 20px;
+    min-height: 35vh;
+
+    font-size: clamp(20px, 2.5vw, 40px);
+    /* 字體大小自動調整 */
+    border-radius: 24px;
+    border: 4px solid #000;
+    background: #fff;
+    color: #000;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.2);
+
+    /* ★ 使用 Flexbox 強制文字垂直與水平置中 */
+    display: flex;
+    flex-direction: column;
+    /* 讓 A 與內容上下排或單行排 */
+    justify-content: center;
+    /* 垂直置中 (解決上方空白問題) */
+    align-items: center;
+    /* 水平置中 */
+    text-align: center;
+
+    /* min-height: 150px; */
+    /* 保持按鈕高度 */
+    line-height: 1.2;
+    white-space: normal;
+    /* 允許文字換行 */
+}
+
+/* 按鈕內部的 b 標籤 (例如 A.) */
+.modal-actions .btn b {
+    margin-bottom: 8px;
+    /* 選項代號跟內容分開一點 */
+    font-size: 1.2em;
+}
+
+/* ===== 新增：當沒有選項時的「單獨置中模式」 ===== */
+/* 這個 class 會由 JS 動態加入 */
+.modal.single-mode {
+    justify-content: center;
+    /* 上下置中 */
+    padding-bottom: 4vh;
+    /* 恢復平衡 */
+}
+
+/* 在單獨模式下，題目卡可以稍微放大或調整 */
+.modal.single-mode .modal-question-box {
+    transform: scale(1.1);
+    /* 稍微放大強調 */
+}
+
+.modal-actions .btn:active {
+    transform: translateY(6px);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* 結果顯示區 (答對/答錯的文字) */
+/* ===== 結果視窗 (修正版) ===== */
+.modal-result {
+    position: fixed;
+    /* 改用 fixed 確保在畫面正中央 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 90%;
+    /* 手機版寬度 */
+    max-width: 800px;
+    /* 電腦版最大寬度 */
+    background: rgba(255, 255, 255, 0.98);
+    /* 背景不透明 */
+    padding: 40px;
+
+    border-radius: 30px;
+    border: 5px solid #000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    z-index: 100;
+    /* 確保在最上層 */
+    display: none;
+    /* 預設隱藏 */
+
+    text-align: center;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+/* 顯示時 */
+.modal-result.show {
+    display: flex;
+}
+
+/* 結果標題 (答對/答錯) */
+.modal-result h2 {
+    font-size: clamp(36px, 5vw, 60px);
+    margin: 0;
+    font-weight: 900;
+}
+
+/* 解說文字 */
+.modal-result p {
+    font-size: clamp(20px, 2.5vw, 32px);
+    /* 放大字體 */
+    line-height: 1.5;
+    margin: 10px 0 30px 0;
+    color: #333;
+}
+
+/* 結果視窗內的按鈕 */
+.modal-result .btn {
+    padding: 15px 40px;
+    font-size: 28px;
+    border-radius: 15px;
+    min-height: auto;
+    /* 重置原本外部按鈕的高度設定 */
+    width: auto;
+    /* 重置寬度 */
+    flex: none;
+    /* 不要自動伸縮 */
+    cursor: pointer;
+}
+
+.actions {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px
+}
+
+.btn {
+    border: 2px solid #111;
+    background: #111;
+    color: #fff;
+    border-radius: 12px;
+    padding: .6em 1em;
+    text-decoration: none;
+    font-weight: 800;
+    cursor: pointer
+}
+
+.btn.ghost {
+    background: #fff;
+    color: #111
+}
+
+.btn.ok {
+    background: #2f9e44;
+    border-color: #2f9e44
+}
+
+.btn.warn {
+    background: #e03131;
+    border-color: #e03131
+}
+
+.close {
+    position: fixed;
+    right: 18px;
+    top: 14px;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    border: 2px solid #e6e6e6;
+    background: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 34px;
+    font-weight: 900;
+    cursor: pointer;
+    z-index: 22;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
+}
+
+.result {
+    margin-top: 12px
+}

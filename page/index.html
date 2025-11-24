@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>抉擇大富翁（多隊版）</title>
+
+    <link rel="stylesheet" href="../assets/css/index.css">
+</head>
+
+<body>
+    <!-- 左側：隊伍數量控制 + 動態分數卡 -->
+    <aside class="sidebar left">
+        <h2>隊伍與金額</h2>
+        <div class="controls">
+            <label for="teamCount">隊伍數：</label>
+            <select id="teamCount" aria-label="隊伍數"></select>
+            <button id="applyTeams" class="btn">套用</button>
+        </div>
+        <div id="teamsContainer" aria-live="polite"></div>
+    </aside>
+
+    <!-- 中央：棋盤 -->
+    <main class="center">
+        <div class="board-wrap">
+            <div class="board" id="board">
+                <!-- 上邊 -->
+                <div class="tile" data-idx="12">
+                    <div class="label">消費</div>
+                </div>
+                <div class="tile" data-idx="13">
+                    <div class="label">資訊</div>
+                </div>
+                <div class="tile" data-idx="14">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile" data-idx="15">
+                    <div class="label">詐騙</div>
+                </div>
+                <div class="tile" data-idx="0">
+                    <div class="label">資訊</div>
+                </div>
+                <!-- 第二列 -->
+                <div class="tile" data-idx="11">
+                    <div class="label">詐騙</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile" data-idx="1">
+                    <div class="label">消費</div>
+                </div>
+                <!-- 第三列 -->
+                <div class="tile" data-idx="10">
+                    <div class="label">消費</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile" data-idx="2">
+                    <div class="label">資訊</div>
+                </div>
+                <!-- 第四列 -->
+                <div class="tile" data-idx="9">
+                    <div class="label">資訊</div>
+                </div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="blank"></div>
+                <div class="tile" data-idx="3">
+                    <div class="label">詐騙</div>
+                </div>
+                <!-- 下邊 -->
+                <div class="tile" data-idx="8">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile" data-idx="7">
+                    <div class="label">詐騙</div>
+                </div>
+                <div class="tile" data-idx="6">
+                    <div class="label">消費</div>
+                </div>
+                <div class="tile" data-idx="5">
+                    <div class="label">機會／命運</div>
+                </div>
+                <div class="tile" data-idx="4">
+                    <div class="label">起點</div>
+                </div>
+            </div>
+
+            <!-- 單一共享棋子（沿用你原本 .piece 樣式，只留一顆） -->
+            <div id="piece" class="piece">
+                <img src="../assets/img/piece1.png" alt="棋子">
+            </div>
+        </div>
+    </main>
+
+    <!-- 右側：擲骰與回合顯示（沿用你的 btn/dice/confirm 元件風格） -->
+    <aside class="sidebar right">
+        <div class="dice-box">
+            <div class="dice-num" id="dice">
+                <img id="diceImg" alt="骰子" />
+                <span id="diceText">–</span>
+            </div>
+
+            <button id="roll" class="btn primary" style="padding:12px 18px;font-size:16px">擲骰</button>
+            <hr style="width:100%;border:none;border-top:1px solid #eee;margin:8px 0">
+            <button id="newgame" class="btn danger" style="padding:10px 14px;width:100%">新遊戲</button>
+        </div>
+    </aside>
+
+    <!-- 進關前確認 -->
+    <div class="confirm" id="confirm">
+        <h4 id="confirm-title">進入關卡？</h4>
+        <div id="confirm-text">是否要進入本格關卡？</div>
+        <div class="row">
+            <button class="btn" id="cancel-enter">取消</button>
+            <button class="btn primary" id="confirm-enter">進入</button>
+        </div>
+    </div>
+
+    <div class="confirm" id="confirm-newgame">
+        <h4>重新開始？</h4>
+        <div style="font-size: 24px; margin: 10px 0 20px; color:#444;">
+            確定要開始新遊戲嗎？<br>
+            <span style="font-size:0.8em; color:#e03131;">(所有分數與進度將會重置)</span>
+        </div>
+        <div class="row">
+            <button class="btn" id="cancel-newgame">取消</button>
+            <button class="btn danger" id="do-newgame">確定重置</button>
+        </div>
+    </div>
+
+    <!-- 置中提示：完成一圈 -->
+    <div id="lapToast" class="toast" aria-live="polite" aria-atomic="true" style="display:none;">
+        <div class="toast-msg">恭喜完成一圈，每隊增加100元！</div>
+    </div>
+
+    <script src="../assets/js/index.js"></script>
+</body>
+
+</html>

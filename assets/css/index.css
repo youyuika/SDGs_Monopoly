@@ -1,0 +1,650 @@
+:root {
+    --board-size: min(95vmin, 1000px);
+    --orange: #f6c26b;
+    --green: #bfe9c3;
+    --blue: #b7e3f9;
+    --pink: #f4c0e6;
+    /* 背景色 */
+    --ui-bg: #b7e3f9;
+    /* 隊伍卡顏色 */
+    --ui-bg-deeper: #dbe7ff;
+}
+
+/* ===== Base ===== */
+* {
+    box-sizing: border-box;
+    font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Noto Sans TC', sans-serif;
+}
+
+body {
+    margin: 0;
+    /* background: #fafafa; <-- 刪除這行舊背景色 */
+
+    /* ★ 新增以下背景圖設定 */
+    background-image: url('../img/主視覺背景圖.png');
+    /* 請確認檔名是否正確 */
+    background-size: cover;
+    /* 讓圖片鋪滿整個畫面 */
+    background-position: center;
+    /* 圖片置中 */
+    background-attachment: fixed;
+    /* 背景固定，不隨捲軸移動 */
+
+    color: #222;
+    display: flex;
+    min-height: 100dvh;
+}
+
+/* ===== Sidebars ===== */
+.sidebar {
+    width: 280px;
+    z-index: 2;
+    position: relative;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.left {
+    border-right: 1px solid #e6e6e6;
+}
+
+.right {
+    border-left: 1px solid #e6e6e6;
+    align-items: center;
+    justify-content: center;
+}
+
+h2 {
+    margin: .2em 0 .4em;
+    font-size: 18px;
+}
+
+/* Team cards */
+.money-card {
+    margin-bottom: 12px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid #e3e3e3;
+    border-radius: 12px;
+    padding: 10px 12px;
+    background: var(--ui-bg-deeper);
+    border-color: rgba(0, 0, 0, .06);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .03);
+}
+
+.money-card .who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+
+.dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+}
+
+.stepper {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.amt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+    min-width: 80px;
+    min-height: 28px;
+    text-align: center;
+}
+
+/* Buttons */
+.btn {
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    border-radius: 10px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: .15s;
+    user-select: none;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn.primary {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.btn.danger {
+    background: #e03131;
+    border-color: #e03131;
+    color: #fff;
+}
+
+/* Left sidebar – enlarged text */
+.sidebar.left {
+    font-size: 18px;
+    line-height: 1.5;
+    /* background: var(--ui-bg); <-- 刪除這行舊背景色 */
+
+    /* ★ 改成半透明白色，並加上一點毛玻璃效果讓文字更清楚 */
+    background: transparent;
+    /* background: rgba(255, 255, 255, 0.6); */
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.4);
+
+    /* 調整內距與字體基礎大小 */
+    padding: 24px 20px;
+    font-size: 20px;
+    /* 基礎字體放大 */
+
+    /* 讓內容有彈性 */
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* 標題優化：放大、加粗、加陰影 */
+.sidebar.left h2 {
+    display: none;
+}
+
+/* 控制列 (隊伍數選擇器) */
+.sidebar.left .controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+
+    background: rgba(255, 255, 255, 0.6);
+    padding: 10px;
+    border-radius: 12px;
+    border: 2px solid #333;
+    justify-content: center;
+    /* 讓內容置中 */
+}
+
+.sidebar.left .controls label {
+    font-weight: 800;
+    font-size: 20px;
+}
+
+.sidebar.left .controls select {
+    font-size: 18px;
+    padding: 4px 8px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.sidebar.left .controls button#applyTeams {
+    font-size: 18px;
+    padding: 4px 12px;
+    background: #333;
+    color: #fff;
+    border: 2px solid #333;
+    border-radius: 8px;
+}
+
+/* ===== 修改：隊伍分數卡 (Money Card) ===== */
+.money-card {
+    margin-bottom: 12px;
+    width: 100%;
+
+    /* 版面配置 */
+    display: flex;
+    flex-direction: column;
+    /* 改為上下排列，讓名字跟分數更清楚 */
+    gap: 8px;
+
+    /* 卡片風格：模仿棋盤格子的普普風 */
+    background: #fff;
+    border: 3px solid #000;
+    /* 粗黑框 */
+    border-radius: 16px;
+    padding: 12px 16px;
+
+    /* 立體陰影效果 */
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s;
+}
+
+.money-card:hover {
+    transform: translateY(-2px);
+    /* 滑鼠懸停時微微浮起 */
+}
+
+/* 隊名樣式 */
+.money-card .who {
+    font-size: 24px;
+    /* 隊名放大 */
+    font-weight: 900;
+    color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* 讓隊名靠左，點點靠右 */
+}
+
+/* 分數操作區 */
+.stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    /* 兩側按鈕，中間分數 */
+    background: #f0f0f0;
+    /* 給操作區一個淺灰底色區分 */
+    border-radius: 10px;
+    padding: 6px;
+}
+
+/* 金額數字 */
+.amt {
+    font-family: 'Verdana', sans-serif;
+    /* 用無襯線字體讓數字清楚 */
+    font-size: 26px;
+    /* 金額放大 */
+    font-weight: 700;
+    color: #333;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* ===== 修改：加減分按鈕 (圓形彩色風格) ===== */
+.money-card .btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    /* 變圓形 */
+    border: 2px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    padding: 0;
+    /* 移除內距以確保文字置中 */
+    box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.3);
+}
+
+/* 減分按鈕 (紅色系) */
+.money-card .btn.minus {
+    background: #ff8787;
+    color: #000;
+}
+
+.money-card .btn.minus:active {
+    background: #e03131;
+}
+
+/* 加分按鈕 (綠色系) */
+.money-card .btn.plus {
+    background: #69db7c;
+    color: #000;
+}
+
+.money-card .btn.plus:active {
+    background: #2f9e44;
+}
+
+/* ===== Board area ===== */
+.center {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    /* background: var(--ui-bg); <-- 刪除這行 */
+    background: transparent;
+    /* ★ 改成透明 */
+}
+
+.board-wrap {
+    position: relative;
+    width: var(--board-size);
+    height: var(--board-size);
+}
+
+/* 棋盤本身必須強制為正方形 */
+.board {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+
+    /* 取消外圈黑邊 */
+    border: none;
+    border-radius: 8px;
+
+    /* 用一張圖當整個棋盤 */
+    background-image: url("../img/board.jpg");
+    /* ← 換成你的完整棋盤圖檔名 */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    /* 填滿容器；若想完整不裁切，可改 contain */
+}
+
+.tile {
+    border: 1px solid #d9d9d9;
+    background: #fff;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 4px 6px;
+    font-size: 12px;
+    text-align: center;
+}
+
+.board .tile {
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background: transparent !important;
+    border: 1px solid transparent;
+}
+
+.board .tile .label {
+    opacity: 0;
+}
+
+/* 保留節點但不顯示 */
+
+/* 中間 3×3 空白格：透明，不要遮擋內圈底圖 */
+.board .blank {
+    background: transparent !important;
+    position: relative;
+    z-index: 1;
+    border: 1px solid transparent;
+}
+
+/* ===== Piece (single shared token, image) ===== */
+.piece {
+    position: absolute;
+    width: calc(var(--board-size) / 5);
+    height: calc(var(--board-size) / 5);
+    /* 依角色比例可再調 */
+    /*transform: translate(-50%, -50%);*/
+    z-index: 3;
+    background: transparent !important;
+    /*border: 1px solid #e6e6e6;*/
+    border-radius: 0;
+    box-shadow: none;
+    /* ← 取消白色邊框 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: left 160ms ease, top 160ms ease;
+}
+
+@keyframes piece-hop {
+    0% {
+        transform: scale(0.96);
+    }
+
+    35% {
+        transform: translateY(-6px) scale(1.08);
+    }
+
+    100% {
+        transform: scale(1.00);
+    }
+}
+
+/*.piece.is-hopping {
+    animation: piece-hop 180ms ease;
+}*/
+
+.piece img {
+    width: 100%;
+    height: auto;
+    display: block;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* ===== Dice / confirm ===== */
+/* 右側骰子區：用與背景同色 */
+.sidebar.right {
+    /* background: var(--ui-bg); */
+    /* background: rgba(255, 255, 255, 0.75); */
+    background: transparent;
+    backdrop-filter: blur(12px);
+    border-left: 1px solid rgba(255, 255, 255, 0.4);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.dice-box {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    /* 拉大間距 */
+    align-items: center;
+    width: 100%;
+    padding: 0 20px;
+}
+
+.dice-num {
+    width: 150px;
+    /* 原本 92px -> 放大到 150px */
+    height: 150px;
+    border: 4px dashed #cfcfcf;
+    /* 邊框加粗 */
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    /* 加一點陰影 */
+}
+
+.dice-num img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none;
+    /* 初始先隱藏，避免 alt 文字露出 */
+}
+
+.dice-num #diceText {
+    font-size: 80px;
+    font-weight: 900;
+    line-height: 1;
+    user-select: none;
+}
+
+.dice-box .btn {
+    width: 100%;
+    /* 讓按鈕填滿寬度 */
+    font-size: 28px !important;
+    /* 強制放大字體 */
+    padding: 16px 0 !important;
+    /* 增加高度 */
+    border-radius: 16px;
+    letter-spacing: 2px;
+    font-weight: 900;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
+    /* 遊戲風格的立體陰影 */
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.dice-box .btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* 分隔線 */
+.dice-box hr {
+    border: none;
+    border-top: 2px solid rgba(0, 0, 0, 0.1);
+    margin: 10px 0;
+    width: 100%;
+}
+
+.turn {
+    font-size: 14px;
+    color: #666;
+}
+
+.turn b {
+    color: #111;
+}
+
+.confirm {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    /* ★ 修改 1: 放大寬度 (原本 420px -> 560px) */
+    width: 560px;
+    max-width: 90vw;
+
+    /* ★ 修改 2: 增加內距，讓版面更舒適 */
+    padding: 40px 50px;
+
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.98);
+    /* 幾乎不透明的白底 */
+    border: 5px solid #333;
+    /* 加粗邊框，風格更強烈 */
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    /* 更深的陰影 */
+    z-index: 100;
+
+    /* ★ 修改 3: 改用 Flexbox 佈局，解決置中問題 */
+    display: none;
+    /* 預設隱藏 */
+    flex-direction: column;
+    align-items: center;
+    /* 水平置中 */
+    justify-content: center;
+    /* 垂直置中 */
+    text-align: center;
+    /* 文字內容置中 */
+}
+
+/* 顯示時必須設定為 flex，才能啟動置中效果 */
+.confirm.show {
+    display: flex;
+}
+
+/* 標題優化 */
+.confirm h4 {
+    font-size: 48px;
+    /* 字體放大 */
+    margin: 0 0 20px 0;
+    /* 控制標題下方的留白 */
+    color: #222;
+    line-height: 1.1;
+    font-weight: 900;
+}
+
+/* 內文文字區域 (針對 inline style 的修正) */
+.confirm div {
+    font-size: 28px !important;
+    /* 強制放大內文 */
+    color: #444;
+    margin-bottom: 10px;
+    /* 按鈕與文字的距離 */
+    line-height: 1.5;
+}
+
+/* 按鈕排列區 */
+.confirm .row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    /* 按鈕之間的間距拉大 */
+    margin-top: 10px;
+}
+
+/* 按鈕本體放大 */
+.confirm .btn {
+    padding: 14px 36px;
+    font-size: 26px;
+    border-radius: 16px;
+    border-width: 3px;
+    flex: 1;
+    /* 讓兩個按鈕等寬 */
+    max-width: 200px;
+    /* 但不要無限大 */
+}
+
+/* 完成一圈置中提示 */
+.toast {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: none;
+    /* 不阻擋點擊 */
+}
+
+/* 完成一圈置中提示（放大版） */
+.toast .toast-msg {
+    background: rgba(0, 0, 0, .82);
+    color: #fff;
+    padding: 32px 48px;
+    /* 再放大卡片 */
+    border-radius: 18px;
+    font-size: 36px;
+    /* 放大字體 */
+    font-weight: 900;
+    letter-spacing: 1px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, .28);
+    opacity: 0;
+}
+
+@keyframes popFade {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    20% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    80% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1.0);
+        opacity: 0;
+    }
+}
