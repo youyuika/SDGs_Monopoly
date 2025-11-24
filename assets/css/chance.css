@@ -172,8 +172,11 @@ header {
     font-size: clamp(24px, 4vw, 56px);
     font-weight: 900;
     line-height: 1.4;
-    color: #000;
-    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
+    /* ★ 修改 1：字體顏色改為白色 */
+    color: #fff;
+
+    /* ★ 修改 2：文字陰影改為黑色 (讓白字更明顯) */
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
 }
 
 /* ===== 按鈕區 ===== */
