@@ -52,7 +52,7 @@ function defaultTeamNames(n) {
 let state = {
     teamCount: 2,
     teamNames: defaultTeamNames(2),
-    money: { t0: 100, t1: 100 },
+    money: { t0: 200, t1: 200 },
     pos: 4
 };
 

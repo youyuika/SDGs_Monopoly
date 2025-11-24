@@ -1,258 +1,258 @@
-// ====== 鍵與共用 ======
+// ====== 基本設定 ======
 const USED_KEY = 'chance_used_v2';
-const STATE_KEY = 'monopoly_state_v4';
-const ACTION_KEY = 'monopoly_action_v1';
-
-// 狀態存取
-function readState() {
-    try { const raw = localStorage.getItem(STATE_KEY); if (raw) return JSON.parse(raw); } catch { }
-    return { teamCount: 2, teamNames: ['第一小隊', '第二小隊'], money: { t0: 100, t1: 100 }, pos: 4 };
-}
-function writeState(st) { localStorage.setItem(STATE_KEY, JSON.stringify(st)); }
-function addMoney(side, delta) {
-    const st = readState();
-    st.money[side] = (st.money[side] ?? 0) + delta;
-    writeState(st);
-    return st.money[side];
-}
-function queueAction(obj) { localStorage.setItem(ACTION_KEY, JSON.stringify(obj)); }
-
-// 已使用卡
 let used = new Set();
 try { const raw = localStorage.getItem(USED_KEY); if (raw) used = new Set(JSON.parse(raw)); } catch { }
+
 function saveUsed() { localStorage.setItem(USED_KEY, JSON.stringify([...used])); }
 function markUsedImmediate(idx) {
-    used.add(idx); saveUsed();
+    used.add(idx);
+    saveUsed();
     const el = document.querySelector(`.card[data-index="${idx}"]`);
-    if (el) { el.classList.add('used'); el.setAttribute('tabindex', '-1'); }
+    if (el) {
+        // ★ 修改：只要加上 class 就好，CSS 會負責讓它消失
+        el.classList.add('used');
+    }
 }
 
-// 題庫（沿用）
-const BASE = {
-    1: `各小隊派1人出來猜拳，第一名的小隊可獲得100元，第二名的小隊可獲得50元，其餘0元。`,
-    2: `群組有人傳「點連結送禮券」的假消息，小隊沒有查證就亂傳，損失50元。`,
-    3: `弄丟了文具，必須花錢重新購買，損失50元。`,
-    4: `未查證就轉傳假消息 → <b>−50</b>（能說正確作法可免扣）。`,
-    5: `反詐騙專線？<b>165</b>。答對 <b>+50</b>；答錯 <b>0</b>。`,
-    6: `喊隊呼 → <b>+100</b>。`,
-    7: `A. 不衝動消費 → <b>+50</b>； B. 買「前進券」→ <b>前進 1 格</b>（回主頁自動）。`,
-    8: `回到起點並 <b>+100</b>（回主頁即時生效）。`,
-    9: `運氣爆棚！<b>+50</b> 並可再擲一次（回主頁手動按）。`,
-    10: `加倍券！下一次答題加倍（由關主記錄）。`,
-    11: `擲骰：≥4 → <b>+50</b>；≤3 → <b>−100</b>；不參與 → 0。`,
-    12: `未查證轉發錯誤資訊 → <b>−50</b>。`,
+// ====== 題目資料 ======
+// type: 'text' (純敘述事件，無選項)
+// type: 'choice' (有選項的題目)
+const CHANCE_DATA = {
+    1: {
+        type: 'text',
+        q: '各小隊派 1 人出來猜拳。<br><br>第一名的小隊可獲得 100 元<br>第二名的小隊可獲得 50 元<br>其餘 0 元。'
+    },
+    2: {
+        type: 'text',
+        q: '<div>群組有人傳「點連結送禮券」的假消息，小隊沒有查證就亂傳，損失 50 元。<br><br><span style="color:#d6336c; font-size:0.8em;">（但如果小隊能說出正確做法的話...）</span></div>'
+    },
+    3: {
+        type: 'text',
+        q: '弄丟了文具，必須花錢重新購買，損失 50 元。'
+    },
+    4: {
+        type: 'text',
+        q: '關主隨機問一題「資訊判讀／詐騙」小問題<br>答對者，獲得 50 元<br>答錯者，不懲罰。'
+    },
+    5: {
+        type: 'text',
+        q: '突如其來的打工機會！<br>小隊執行喊隊呼，可獲得 50 元。'
+    },
+    6: {
+        type: 'text',
+        q: '沒有查證就轉發假新聞，經驗證結果是錯誤資訊，損失 50 元。'
+    },
+    7: {
+        type: 'text',
+        q: '獲得加倍券！下一題回答問題所獲得的獎金翻倍。'
+    },
+    8: {
+        type: 'text',
+        q: '賺錢的機會：各小隊派一人跟關主猜拳。<br><br>贏的獲得 100 元<br>平手 0 元<br>輸的損失 50 元'
+    },
+    // <br><br>（如選擇不參與則維持現狀）
+    // --- 以下為選擇題 ---
+    9: {
+        type: 'choice',
+        q: '小隊看到群組有人傳「抽獎要填個人資料」訊息，討論後決定要不要參加。',
+        opts: [
+            {
+                label: '參加',
+                resTitle: '❌ 損失 50 元',
+                resDesc: '參加者損失 50 元。<br>關主提醒：注意個人資料保護及網路詐騙釣魚手法。',
+                isGood: false
+            },
+            {
+                label: '不參加',
+                resTitle: '⭕ 獲得 50 元',
+                resDesc: '不參加者獲得 50 元。<br>很好的警覺心！',
+                isGood: true
+            }
+        ]
+    },
+    10: {
+        type: 'choice',
+        q: '零用錢有 300 元，你會怎麼分配？（請各小隊討論後選擇）',
+        opts: [
+            {
+                label: '全部買晚餐',
+                resTitle: '❌ 損失 50 元',
+                resDesc: '結果發現自己吃不完，屬於浪費食物的行為。',
+                isGood: false
+            },
+            {
+                label: '買便當 100 元，剩下存下來',
+                resTitle: '⭕ 獲得 100 元',
+                resDesc: '合理的金錢分配！',
+                isGood: true
+            }
+        ]
+    },
+    11: {
+        type: 'choice',
+        q: '看到「限時買遊戲點數優惠」訊息，你會怎麼做？',
+        opts: [
+            {
+                label: '馬上下單',
+                resTitle: '❌ 損失 50 元',
+                resDesc: '屬於衝動購物。',
+                isGood: false
+            },
+            {
+                label: '先問家長',
+                resTitle: '⭕ 獲得 50 元',
+                resDesc: '理性討論及評估，做得好！',
+                isGood: true
+            }
+        ]
+    },
+    12: {
+        type: 'choice',
+        q: '發現同學轉傳假新聞，你會怎麼做？',
+        opts: [
+            {
+                label: '趕緊轉發',
+                resTitle: '❌ 損失 50 元',
+                resDesc: '加速假消息的散播。',
+                isGood: false
+            },
+            {
+                label: '提醒同學',
+                resTitle: '⭕ 獲得 50 元',
+                resDesc: '更正錯誤資訊，很棒的媒體素養！',
+                isGood: true
+            }
+        ]
+    }
 };
 
-// 生成 1~15 卡片
+// ====== 生成卡片 (1~15) ======
 const grid = document.getElementById('grid');
+// 這裡產生 15 張卡片，雖然目前題目只有 12 題，避免錯誤我們還是生成 15 張
+// 超出範圍的卡片會顯示「尚未設定」
 for (let i = 1; i <= 12; i++) {
     const card = document.createElement('div');
-    card.className = 'card'; card.dataset.index = String(i);
+    card.className = 'card';
+    card.dataset.index = String(i);
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
+
+    // 設定背景圖
     card.style.backgroundImage = `url("../assets/img/命運&機會卡/${i}.png")`;
-    card.innerHTML = `<div class="num">${i}</div>`;
-    if (used.has(i)) card.classList.add('used');
-    card.addEventListener('click', () => { if (!card.classList.contains('used')) openModal(i); });
-    card.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); if (!card.classList.contains('used')) openModal(i); } });
+
+    // 如果已使用，套用已使用樣式
+    if (used.has(i)) {
+        // ★ 修改：只要加上 class 就好
+        card.classList.add('used');
+    }
+
+    card.addEventListener('click', () => { if (!used.has(i)) openModal(i); });
     grid.appendChild(card);
 }
 
-// Modal
-const modal = document.getElementById('modal');
-const modalTitle = document.getElementById('modalTitle');
-const modalBody = document.getElementById('modalBody');
-const closeBtn = document.getElementById('closeBtn');
-let activeIndex = null;
+// ====== Modal 邏輯 ======
+const modalEl = document.getElementById('modal');
+
+function closeModal() {
+    modalEl.classList.remove('show');
+}
 
 function openModal(i) {
-    activeIndex = i;
-    modalTitle.textContent = `機會／命運 #${i}`;
-    renderQuestion(i);
-    modal.classList.add('show'); closeBtn.focus();
-}
-function closeModal() {
-    modal.classList.remove('show');
-    if (activeIndex != null) { markUsedImmediate(activeIndex); activeIndex = null; }
-}
-closeBtn.addEventListener('click', closeModal);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    const d = CHANCE_DATA[i];
 
-// 共用：產生小隊選擇器
-function renderTeamPicker() {
-    const st = readState();
-    const wrap = document.createElement('div');
-    wrap.className = 'team-picker';
-    wrap.innerHTML = `<div style="margin:6px 0 10px; font-weight:700">記分對象：</div>`;
-    const row = document.createElement('div');
-    row.style.display = 'flex'; row.style.flexWrap = 'wrap'; row.style.gap = '6px';
+    // 如果點到沒有設定的題目 (例如第 13~15 題)
+    if (!d) {
+        alert('本題尚未設定');
+        return;
+    }
 
-    let current = null;
-    Object.keys(st.money).sort().forEach(k => {
-        const idx = Number(k.replace('t', '') || 0);
-        const name = st.teamNames?.[idx] || `小隊 ${idx + 1}`;
+    modalEl.innerHTML = ''; // 清空
+    modalEl.classList.add('show');
+
+    // 判斷是「純文字事件」還是「選擇題」
+    const isTextMode = (d.type === 'text');
+
+    // 1. 設定排版模式
+    if (isTextMode) {
+        modalEl.classList.add('single-mode'); // 置中
+    } else {
+        modalEl.classList.remove('single-mode'); // 上下排版
+    }
+
+    // 2. 建立題目字卡
+    const qBox = document.createElement('div');
+    qBox.className = 'modal-question-box';
+    // 背景圖設定 (請確認檔名是否正確)
+    qBox.style.backgroundImage = "url('../assets/img/機會_命運.jpg')";
+    qBox.innerHTML = d.q;
+
+    // 針對文字較多的題目 (例如第1題) 自動縮小字體
+    if (d.q.length > 50) {
+        qBox.style.fontSize = 'clamp(20px, 3vw, 40px)';
+    }
+
+    modalEl.appendChild(qBox);
+
+    // 3. 根據類型建立按鈕
+    const actBox = document.createElement('div');
+    actBox.className = 'modal-actions';
+
+    if (isTextMode) {
+        // --- 純文字事件模式：只有一個「返回」按鈕 ---
         const btn = document.createElement('button');
-        btn.className = 'btn'; btn.type = 'button';
-        btn.textContent = name;
-        btn.dataset.team = k;
-        btn.addEventListener('click', () => {
-            row.querySelectorAll('button').forEach(b => b.classList.remove('primary'));
-            btn.classList.add('primary'); current = k;
+        btn.className = 'btn primary';
+        btn.textContent = '完成 / 返回大富翁';
+        btn.style.minHeight = 'auto'; // 這種按鈕不需要太高
+        btn.style.fontSize = '28px';
+        btn.style.padding = '20px 60px';
+
+        btn.onclick = () => {
+            markUsedImmediate(i);
+            location.href = 'index.html';
+        };
+        actBox.appendChild(btn);
+
+    } else {
+        // --- 選擇題模式：顯示選項 ---
+        // 結果視窗
+        const resBox = document.createElement('div');
+        resBox.className = 'modal-result';
+        modalEl.appendChild(resBox);
+
+        const letters = ['A', 'B'];
+        d.opts.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = `<b>${letters[idx]}</b><div>${opt.label}</div>`;
+
+            btn.onclick = () => {
+                // 顯示結果
+                resBox.classList.add('show');
+
+                // 根據結果好壞顯示不同顏色
+                const titleColor = opt.isGood ? '#2f9e44' : '#e03131';
+
+                resBox.innerHTML = `
+                    <h2 style="color:${titleColor};">${opt.resTitle}</h2>
+                    <p>
+                        ${opt.resDesc}<br>
+                        <span style="font-size:0.8em; color:#666">(請關主手動記分)</span>
+                    </p>
+                    <button class="btn primary" onclick="markUsedImmediate(${i}); location.href='index.html'">
+                        返回大富翁
+                    </button>
+                `;
+            };
+            actBox.appendChild(btn);
         });
-        row.appendChild(btn);
-    });
-
-    wrap.getSelected = () => current;
-    wrap.appendChild(row);
-    return wrap;
-}
-
-// 題目互動（全部題目都以「選擇的小隊」為記分對象）
-function renderQuestion(i) {
-    const wrap = document.createElement('div');
-    wrap.innerHTML = `<div>${BASE[i] || '（尚未設定）'}</div>`;
-
-    const picker = renderTeamPicker();
-    const actions = document.createElement('div'); actions.className = 'actions';
-    const result = document.createElement('div'); result.className = 'note';
-
-    function needTeam() {
-        const k = picker.getSelected?.();
-        if (!k) { result.textContent = '請先選擇「記分對象」小隊再操作。'; return null; }
-        return k;
     }
 
-    switch (i) {
-        case 1: {
-            // 直接用每隊一顆「勝方 +50」按鈕
-            const st = readState();
-            actions.innerHTML = Object.keys(st.money).sort().map(k => {
-                const idx = Number(k.replace('t', '') || 0);
-                const name = st.teamNames?.[idx] || `小隊 ${idx + 1}`;
-                return `<button class="btn" data-team="${k}">${name}勝（+50）</button>`;
-            }).join('');
-            actions.addEventListener('click', (ev) => {
-                const k = ev.target?.dataset?.team; if (!k) return;
-                addMoney(k, 50);
-                result.textContent = '已加 +50。';
-                [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
-            });
-        } break;
+    modalEl.appendChild(actBox);
 
-        case 2: case 5: case 6: case 14: {
-            // 加分型
-            const bonus = { 2: 50, 5: 50, 6: 100, 14: 50 }[i];
-            actions.innerHTML = `
-        <button class="btn" data-act="ok">給分（+${bonus}）</button>
-        <button class="btn ghost" data-act="skip">不給分（0）</button>`;
-            actions.addEventListener('click', (e) => {
-                const act = e.target?.dataset?.act; if (!act) return;
-                const k = needTeam(); if (!k && act !== 'skip') return;
-                if (act === 'ok') { addMoney(k, bonus); result.textContent = `已加 +${bonus}`; }
-                else { result.textContent = '已記錄（0）'; }
-                [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
-            });
-        } break;
-
-        case 3: case 4: case 12: {
-            const penalty = { 3: -50, 4: -50, 12: -50 }[i];
-            actions.innerHTML = `<button class="btn warn" data-act="pen">扣分（${penalty}）</button>`;
-            actions.addEventListener('click', (e) => {
-                const k = needTeam(); if (!k) return;
-                addMoney(k, penalty); result.textContent = `已扣 ${-penalty}`;
-                e.target.disabled = true;
-            });
-        } break;
-
-        case 7: {
-            actions.innerHTML = `
-        <button class="btn" data-act="A">選 A（不衝動消費 +50）</button>
-        <button class="btn" data-act="B">選 B（買前進券 → 前進 1 格）</button>`;
-            actions.addEventListener('click', (e) => {
-                const act = e.target?.dataset?.act; if (!act) return;
-                if (act === 'A') {
-                    const k = needTeam(); if (!k) return;
-                    addMoney(k, 50); result.textContent = '已加 +50';
-                    [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
-                } else {
-                    markUsedImmediate(7);
-                    queueAction({ type: 'move_for', steps: 1 });
-                    const back = document.createElement('div'); back.className = 'actions';
-                    back.innerHTML = `<a class="btn" href="index.html">返回大富翁</a>`;
-                    actions.after(back);
-                    result.textContent = '本局前進 1 格（回主頁後自動）。';
-                    [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
-                }
-            });
-        } break;
-
-        case 8: {
-            actions.innerHTML = `<button class="btn" data-act="go">回起點並 +100（返回大富翁）</button>`;
-            actions.addEventListener('click', () => {
-                const k = needTeam(); if (!k) return;
-                addMoney(k, 100);
-                markUsedImmediate(8);
-                queueAction({ type: 'go_start' });
-                location.href = 'index.html';
-            });
-        } break;
-
-        case 9: {
-            actions.innerHTML = `<button class="btn" data-act="again">+50 並可再擲一次（返回大富翁）</button>`;
-            actions.addEventListener('click', () => {
-                const k = needTeam(); if (!k) return;
-                addMoney(k, 50);
-                markUsedImmediate(9);
-                queueAction({ type: 'extra_roll' });
-                location.href = 'index.html';
-            });
-        } break;
-
-        case 11: {
-            actions.innerHTML = `
-        <button class="btn" data-act="roll">在此擲骰</button>
-        <button class="btn ghost" data-act="skip">不參與（0）</button>
-        <span id="p11res" class="note"></span>`;
-            actions.addEventListener('click', (e) => {
-                const act = e.target?.dataset?.act; if (!act) return;
-                if (act === 'skip') { closeModal(); return; }
-                const k = needTeam(); if (!k) return;
-                const n = 1 + Math.floor(Math.random() * 6);
-                const resEl = document.getElementById('p11res');
-                if (n >= 4) { addMoney(k, 50); resEl.innerHTML = `點數 <b>${n}</b>：+50 ✔`; }
-                else { addMoney(k, -100); resEl.innerHTML = `點數 <b>${n}</b>：-100`; }
-                e.target.disabled = true; e.target.textContent = `已擲出 ${n}`;
-            });
-        } break;
-
-        case 13: {
-            actions.innerHTML = `
-        <button class="btn" data-act="save">使用合法折扣券比價（+50）</button>
-        <button class="btn ghost" data-act="full">堅持原價（-50）</button>`;
-            actions.addEventListener('click', (e) => {
-                const act = e.target?.dataset?.act; if (!act) return;
-                const k = needTeam(); if (!k) return;
-                addMoney(k, act === 'save' ? 50 : -50);
-                result.textContent = act === 'save' ? '已加 +50' : '已扣 50';
-                [...actions.querySelectorAll('button')].forEach(b => b.disabled = true);
-            });
-        } break;
-
-        case 10: case 15: {
-            // 不涉及自動記分的描述/分流
-            actions.innerHTML = `<button class="btn ghost">知道了</button>`;
-            actions.addEventListener('click', closeModal);
-        } break;
-
-        default: {
-            actions.innerHTML = `<button class="btn ghost">知道了</button>`;
-            actions.addEventListener('click', closeModal);
-        }
-    }
-
-    wrap.appendChild(picker);
-    wrap.appendChild(actions);
-    wrap.appendChild(result);
-    modalBody.innerHTML = '';
-    modalBody.appendChild(wrap);
+    // 關閉按鈕 (X)
+    const close = document.createElement('button');
+    close.className = 'close';
+    close.innerHTML = '×';
+    close.onclick = closeModal;
+    modalEl.appendChild(close);
 }

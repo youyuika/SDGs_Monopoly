@@ -261,7 +261,7 @@ header {
 
 /* 在單獨模式下，題目卡可以稍微放大或調整 */
 .modal.single-mode .modal-question-box {
-    transform: scale(1.1);
+    transform: scale(1);
     /* 稍微放大強調 */
 }
 

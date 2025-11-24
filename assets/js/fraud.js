@@ -195,30 +195,39 @@ function renderQuestion(i) {
 
         modalEl.appendChild(actBox);
     } else {
-        // ★ 針對無選項的簡答題：
-        // 這裡可能需要一個「看答案」或「返回」的按鈕，不然畫面會卡住
-        // 為了不破壞畫面美感，我們可以在題目卡下方加一個小的透明按鈕，或者直接依賴右上角的 X 關閉
-        // 這裡示範加一個簡單的「顯示詳解/返回」按鈕在正下方
+        // ★★★ 修改：簡答題模式 (樣式比照機會命運) ★★★
+
+        // 1. 建立按鈕容器 (為了讓排版位置與機會命運一致)
+        const actBox = document.createElement('div');
+        actBox.className = 'modal-actions';
+
+        // 2. 建立按鈕
         const backBtn = document.createElement('button');
         backBtn.className = 'btn primary';
-        backBtn.style.marginTop = '30px';
-        backBtn.style.padding = '15px 40px';
-        backBtn.style.fontSize = '24px';
-        backBtn.textContent = '查看詳解 / 返回';
 
-        // 簡單顯示詳解的邏輯 (用 alert 或直接切換內容)
+        // ★ 關鍵樣式設定：比照 chance.js
+        backBtn.style.minHeight = 'auto';   // 覆蓋原本的大按鈕高度
+        backBtn.style.fontSize = '28px';
+        backBtn.style.padding = '20px 60px';
+
+        backBtn.textContent = '查看詳解';
+
+        // 3. 按鈕邏輯：第一階段顯示詳解 -> 第二階段返回
         backBtn.onclick = () => {
-            qBox.innerHTML = `<div style="font-size:0.8em">${d.explain || '老師講解時間！'}</div>`;
-            // 把按鈕改成返回
-            backBtn.textContent = '返回大富翁';
+            // 顯示詳解 (字體稍微縮小以利閱讀)
+            qBox.innerHTML = `<div style="font-size:0.8em; line-height:1.5">${d.explain || '老師講解時間！'}</div>`;
+
+            // 把按鈕改成返回功能
+            backBtn.textContent = '完成 / 返回大富翁';
             backBtn.onclick = () => {
-                markUsedImmediate(i);
+                markUsedImmediate(i); // 標記為已使用
                 location.href = 'index.html';
             };
         };
 
-        // 將這個按鈕加到 modal (因為是 column 排列，它會自動在圖片下方)
-        modalEl.appendChild(backBtn);
+        // 將按鈕加入容器，再將容器加入 Modal
+        actBox.appendChild(backBtn);
+        modalEl.appendChild(actBox);
     }
 
     // 重建關閉按鈕功能

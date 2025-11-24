@@ -18,10 +18,12 @@ body {
 
 body {
     margin: 0;
+    /* ★ 背景圖設定 */
     background-image: url('../img/主視覺背景圖.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
+
     color: #222;
     font-size: var(--fs-body);
 }
@@ -29,14 +31,12 @@ body {
 header {
     position: sticky;
     top: 0;
-    /* background: #fff; <-- 刪除舊的全白背景 */
-
-    /* ★ 改成半透明白色 */
+    /* ★ 半透明毛玻璃效果 */
+    /* background: rgba(255, 255, 255, 0.85); */
     background: transparent;
     backdrop-filter: blur(10px);
-
-    /* 調整底部邊框顏色讓它柔和一點 */
     border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -84,136 +84,224 @@ header {
     }
 }
 
+/* ===== 卡片樣式 (配合 JS 載入圖片 1~15.png) ===== */
 .card {
     aspect-ratio: 3/4;
     display: flex;
     align-items: center;
     justify-content: center;
+
+    /* 移除邊框與顏色，讓 JS 填入圖片 */
     border: none;
     background-color: transparent;
     background-repeat: no-repeat;
     background-position: center;
     background-size: 100% 100%;
-    /* 強制圖片填滿整張卡 */
+    /* 強制圖片填滿 */
+
     cursor: pointer;
     user-select: none;
     position: relative;
     transition: transform .15s, box-shadow .15s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, .06)
 }
 
 .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, .12)
+    /* 微微的發光效果 */
+    filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.3));
 }
 
+/* 隱藏原本的文字數字 (因為圖片上有數字了) */
 .card .num {
     display: none;
 }
 
+/* 已使用狀態 (JS 會加這個 class) */
 .card.used {
     visibility: hidden;
-    pointer-events: none
+    /* 讓卡片直接消失佔位 */
+    pointer-events: none;
+    cursor: default;
 }
 
+/* ===== Modal 全螢幕容器 (置中版) ===== */
 .modal {
     position: fixed;
     inset: 0;
-    /* 背景改為透明，讓星空底圖露出來，可加深色遮罩讓文字更跳 */
     background: rgba(0, 0, 0, 0.4);
-    display: none;
+    /* 深色遮罩 */
     z-index: 20;
-    /* 改用 Flexbox 佈局：上部分是題目，下部分是按鈕 */
+
     display: none;
-    /* JS 控制 show/hide */
     flex-direction: column;
-    justify-content: space-between;
-    /* 上下撐開 */
+
+    /* 置中與間距設定 */
+    justify-content: center;
     align-items: center;
+    gap: 4vh;
+    /* 控制題目與按鈕的距離 */
+
     padding: 4vh 4vw;
-    /* 四周留邊 */
 }
 
 .modal.show {
-    display: block
+    display: flex !important;
 }
 
-.modal .inner {
-    max-width: 1100px;
-    margin: 90px auto 60px;
-    padding: 0 24px
-}
+/* ===== 題目字卡區 ===== */
+.modal-question-box {
+    width: 100%;
+    max-width: 1550px;
+    aspect-ratio: 20 / 6;
+    /* 配合橫幅比例 */
 
-.modal h1 {
-    margin: 0 0 14px;
-    font-size: var(--fs-title);
-    line-height: 1.15
-}
+    /* 背景圖 */
+    background-image: url('../img/機會_命運.jpg');
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
 
-.modal .content {
-    border: 2px solid #eee;
-    border-radius: 20px;
-    padding: 24px 22px;
-    box-shadow: 0 18px 44px rgba(0, 0, 0, .12);
-    line-height: 1.7;
-    background: #fff;
-    font-size: var(--fs-modal)
-}
-
-.actions {
-    margin-top: 16px;
     display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-items: center
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+
+    /* 內距 (避開圖片邊緣裝飾) */
+    padding: 4% 15%;
+
+    font-size: clamp(24px, 4vw, 56px);
+    font-weight: 900;
+    line-height: 1.4;
+    color: #000;
+    text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
 }
 
-.btn {
-    border: 2px solid #111;
-    background: #111;
-    color: #fff;
-    border-radius: 12px;
-    padding: .6em 1em;
-    text-decoration: none;
-    font-weight: 800;
-    cursor: pointer
+/* ===== 按鈕區 ===== */
+.modal-actions {
+    width: 100%;
+    max-width: 1600px;
+    margin-top: 0;
+    padding-top: 0;
+
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: nowrap;
 }
 
-.btn.ghost {
+.modal-actions .btn {
+    flex: 1;
+    padding: 10px 20px;
+
+    /* 增加按鈕高度，讓它看起來更平衡 */
+    min-height: 22vh;
+
+    font-size: clamp(20px, 2.5vw, 40px);
+    border-radius: 24px;
+    border: 4px solid #000;
     background: #fff;
-    color: #111
+    color: #000;
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0.2);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    line-height: 1.2;
+    white-space: normal;
+    cursor: pointer;
+    transition: transform 0.1s;
 }
 
-.btn.ok {
-    background: #2f9e44;
-    border-color: #2f9e44
+.modal-actions .btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.2);
 }
 
-.btn.warn {
-    background: #e03131;
-    border-color: #e03131
+/* 按鈕內的選項標號 (A, B) */
+.modal-actions .btn b {
+    margin-bottom: 12px;
+    font-size: 1.3em;
+    color: #d6336c;
+    /* 機會命運可以用比較活潑的顏色 */
 }
 
+/* 關閉按鈕 */
 .close {
     position: fixed;
-    right: 18px;
-    top: 14px;
-    width: 56px;
-    height: 56px;
-    border-radius: 14px;
-    border: 2px solid #e6e6e6;
+    right: 24px;
+    top: 24px;
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    border: 3px solid #000;
     background: #fff;
     display: grid;
     place-items: center;
-    font-size: 34px;
+    font-size: 40px;
     font-weight: 900;
     cursor: pointer;
     z-index: 22;
-    box-shadow: 0 14px 36px rgba(0, 0, 0, .18)
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.2);
 }
 
-.note {
-    opacity: .75;
-    font-size: .9em;
-    margin-top: 8px
+.close:active {
+    transform: translateY(4px);
+    box-shadow: none;
+}
+
+/* ===== 結果視窗 ===== */
+.modal-result {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+    width: 90%;
+    max-width: 800px;
+    background: rgba(255, 255, 255, 0.98);
+    padding: 40px;
+
+    border-radius: 30px;
+    border: 5px solid #000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.modal-result.show {
+    display: flex;
+}
+
+.modal-result h2 {
+    font-size: clamp(36px, 5vw, 60px);
+    margin: 0 0 20px 0;
+    font-weight: 900;
+}
+
+.modal-result p {
+    font-size: clamp(20px, 2.5vw, 32px);
+    line-height: 1.5;
+    margin: 0 0 30px 0;
+    color: #333;
+}
+
+/* 結果視窗內的按鈕特別設定 */
+.modal-result .btn {
+    padding: 15px 50px;
+    font-size: 28px;
+    border-radius: 16px;
+    border: 3px solid #000;
+    background: #111;
+    color: #fff;
+    cursor: pointer;
+    min-height: auto;
+    /* 重置外部按鈕的高度 */
+    flex: none;
 }
