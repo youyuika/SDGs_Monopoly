@@ -9,6 +9,29 @@ const TILES = [
 ];
 const TILE_COUNT = TILES.length;
 
+const LEVEL_CONFIG = {
+    'consume': { key: 'consume_used_v1', total: 12 },
+    'fraud': { key: 'fraud_used_v1', total: 12 },
+    'info': { key: 'info_used_v1', total: 12 },
+    'chance': { key: 'chance_used_v2', total: 12 }
+};
+
+// 檢查該關卡是否已全數完成
+function isLevelFull(type) {
+    const config = LEVEL_CONFIG[type];
+    if (!config) return false; // 如果是起點或其他類型，視為未滿
+
+    try {
+        const raw = localStorage.getItem(config.key);
+        if (!raw) return false;
+        const usedSet = JSON.parse(raw); // 讀取已使用的題號陣列
+        // 檢查已使用的數量是否 >= 總數
+        return usedSet.length >= config.total;
+    } catch {
+        return false;
+    }
+}
+
 // === 骰子圖設定 ===
 const DICE_IMAGES = [
     "../assets/img/dice/1.png",
@@ -207,20 +230,23 @@ function awardLapBonus() {
 }
 
 // 顯示 3 秒 toast
-function showLapToast(duration = 3000) {  // 預設 3 秒
+function showToast(text, duration = 3000) {
     const t = document.getElementById('lapToast');
     if (!t) return;
-    const msg = t.querySelector('.toast-msg');
+    const msgEl = t.querySelector('.toast-msg');
+
+    // 更新文字內容
+    msgEl.textContent = text;
 
     // 顯示容器
     t.style.display = 'flex';
 
-    // 重新觸發動畫
-    msg.style.animation = 'none';
-    msg.offsetHeight; // 強制重排
-    msg.style.animation = `popFade ${duration}ms ease forwards`;
+    // 重新觸發動畫 (移除再加入)
+    msgEl.style.animation = 'none';
+    msgEl.offsetHeight; // 強制瀏覽器重繪 (Trigger Reflow)
+    msgEl.style.animation = `popFade ${duration}ms ease forwards`;
 
-    // duration 後自動隱藏
+    // 時間到自動隱藏
     setTimeout(() => { t.style.display = 'none'; }, duration);
 }
 
@@ -259,8 +285,8 @@ function roll() {
         clearInterval(anim);
 
         // 真實骰子點數
-        //const n = 1 + Math.floor(Math.random() * 6);
-        const n = 1
+        const n = 1 + Math.floor(Math.random() * 6);
+        // const n = 7
         setDiceFace(n);
 
         // 這一拍只算完骰子，不做重工作
@@ -270,19 +296,38 @@ function roll() {
         animateMove(n, () => {
             saveState();
 
-            // 走完後才檢查格子類型 / 顯示卡片
+            // 1. 取得現在停留的格子類型
             const tileType = TILES.find(t => t.idx === state.pos)?.type || '';
+
+            // 2. 判斷是否經過起點
             const passedStart = crossesStart(oldPos, n);
             if (passedStart) {
                 awardLapBonus();
-                showLapToast();
+                // 顯示經過起點的提示
+                showToast('恭喜完成一圈，每隊增加100元！');
             }
 
+            // 3. 判斷格子類型並執行對應動作
             if (tileType !== 'start') {
-                const mapping = { fraud: '詐騙', consume: '消費', info: '資訊', chance: '機會／命運', start: '起點' };
-                confirmTitle.textContent = `停在「${mapping[tileType] || '關卡'}」`;
-                confirmText.textContent = `要進入「${mapping[tileType] || '關卡'}」關卡嗎？`;
-                confirmBox.classList.add('show');
+                // ★ 新增邏輯：檢查該關卡是否已經玩完？
+                if (isLevelFull(tileType)) {
+                    // 如果過了起點，延遲一點顯示，避免兩個提示疊在一起
+                    const delay = passedStart ? 3000 : 0;
+
+                    setTimeout(() => {
+                        showToast('已經完成這個關卡了，繼續骰骰子吧！');
+                    }, delay);
+
+                } else {
+                    // 關卡還沒玩完 -> 顯示原本的「進入關卡」確認框
+                    const mapping = { fraud: '詐騙', consume: '消費', info: '資訊', chance: '機會／命運', start: '起點' };
+                    confirmTitle.textContent = `停在「${mapping[tileType] || '關卡'}」`;
+
+                    // 這裡可以微調文字，讓語意更順
+                    confirmText.innerHTML = `要進入<b>「${mapping[tileType]}」</b>關卡嗎？`;
+
+                    confirmBox.classList.add('show');
+                }
             }
 
             rolling = false;
