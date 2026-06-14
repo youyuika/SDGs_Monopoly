@@ -15,8 +15,16 @@
 
 * {
   box-sizing: border-box;
-  font-family: "ZhuyinFont", system-ui, -apple-system, Segoe UI, Roboto,
-    Helvetica, Arial, "Noto Sans TC", sans-serif;
+  font-family:
+    "ZhuyinFont",
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    "Noto Sans TC",
+    sans-serif;
 }
 
 html,
@@ -28,7 +36,11 @@ button,
 select,
 input,
 textarea {
-  font-family: "ZhuyinFont", system-ui, -apple-system, sans-serif !important;
+  font-family:
+    "ZhuyinFont",
+    system-ui,
+    -apple-system,
+    sans-serif !important;
 }
 
 body {
@@ -113,7 +125,9 @@ header {
   cursor: pointer;
   user-select: none;
   position: relative;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
@@ -195,10 +209,10 @@ header {
   font-weight: 900;
   line-height: 1.4;
   /* ★ 修改 1：字體顏色改為白色 */
-  color: #fff;
+  color: #000;
 
   /* ★ 修改 2：文字陰影改為黑色 (讓白字更明顯) */
-  text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.8);
+  text-shadow: 2px 2px 0px #fff;
 }
 
 /* 針對不同圖片的微調 (您可以貼在各檔案覆蓋上面的 padding) */
